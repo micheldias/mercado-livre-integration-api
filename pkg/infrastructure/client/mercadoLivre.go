@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	util "mercado-livre-integration/pkg/infrastructure/http"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,13 +14,15 @@ type MercadoLivre interface {
 }
 
 // NewMercadoLivre creates a new Mercado Livre client
-func NewMercadoLivre(clientID, secret, redirectUrl, url string, httpClient *http.Client) MercadoLivre {
+func NewMercadoLivre(clientID, secret, redirectUrl, url string) MercadoLivre {
 	return &mercadoLivre{
 		url:          url,
 		clientID:     clientID,
 		clientSecret: secret,
 		redirectUrl:  redirectUrl,
-		httpClient:   httpClient,
+		httpClient: &http.Client{
+			Transport: &util.RoundTripperLogger{Inner: http.DefaultTransport},
+		},
 	}
 }
 
