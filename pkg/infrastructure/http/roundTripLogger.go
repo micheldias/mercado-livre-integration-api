@@ -1,7 +1,7 @@
 package util
 
 import (
-	"fmt"
+	contexthelper "mercado-livre-integration/pkg/infrastructure/contextHelper"
 	"net/http"
 	"net/http/httputil"
 )
@@ -11,23 +11,29 @@ type RoundTripperLogger struct {
 }
 
 func (r *RoundTripperLogger) RoundTrip(request *http.Request) (*http.Response, error) {
-	dumpRequest, err := httputil.DumpRequest(request, true)
-	if err != nil {
-		fmt.Println("error when try to dump request", err.Error())
-	}
-	fmt.Println("sending request", string(dumpRequest))
+	logger, ok := contexthelper.GetLogger(request.Context())
 
+	if ok {
+		dumpRequest, err := httputil.DumpRequest(request, true)
+		if err != nil {
+			logger.Warning("error when try to dump request", "error", err.Error())
+		}
+		logger.Info("sending request", string(dumpRequest))
+	}
 	response, err := r.Inner.RoundTrip(request)
 	if err != nil {
-		fmt.Println("error in request", err.Error())
+		logger.Error("error in request", "error", err.Error())
 		return response, err
 	}
-	dumpResponse, err := httputil.DumpResponse(response, true)
-	if err != nil {
-		fmt.Println("error when try to dump response", err.Error())
+	if ok {
+		dumpResponse, err := httputil.DumpResponse(response, true)
+		if err != nil {
+			logger.Warning("error when try to dump response", "error", err.Error())
 
+		}
+		logger.Info("received response", string(dumpResponse))
 	}
-	fmt.Println("sending request", string(dumpResponse))
+
 	return response, err
 
 }
