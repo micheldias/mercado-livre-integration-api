@@ -12,6 +12,7 @@ import (
 type MercadoLivre interface {
 	CreateToken(authCode string) (*AuthTokenResponse, error)
 	CreateRefreshToken(refreshToken string) (*AuthTokenResponse, error)
+	GetUser(userID string) (User, error)
 }
 
 // NewMercadoLivre creates a new Mercado Livre client
@@ -36,6 +37,34 @@ type mercadoLivre struct {
 	redirectUrl  string
 	httpClient   *http.Client
 	Cache        map[string]string
+}
+
+func (m mercadoLivre) GetUser(userID string) (User, error) {
+	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/users/%s", m.url, userID), nil)
+	if err != nil {
+		return User{}, fmt.Errorf("failed to create http request: %s ", err.Error())
+	}
+	request.Header.Add("content-type", "application/json")
+
+	response, err := m.httpClient.Do(request)
+
+	if err != nil {
+		return User{}, fmt.Errorf("failed to execute http request: %s", err.Error())
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		errorResponse := &Error{}
+		if err = json.NewDecoder(response.Body).Decode(&errorResponse); err != nil {
+			return User{}, fmt.Errorf("failed to parse body: %s", err.Error())
+		}
+		return User{}, fmt.Errorf("status code: %d", response.StatusCode)
+	}
+	user := User{}
+	if err = json.NewDecoder(response.Body).Decode(&user); err != nil {
+		return User{}, fmt.Errorf("failed to parse response: %s", err.Error())
+	}
+	return user, err
 }
 
 func (m mercadoLivre) CreateToken(authCode string) (*AuthTokenResponse, error) {
@@ -64,7 +93,7 @@ func (m mercadoLivre) requestToken(body *strings.Reader) (AuthTokenResponse, err
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		errorResponse := &AuthTokenErrorResponse{}
+		errorResponse := &Error{}
 		if err = json.NewDecoder(response.Body).Decode(&errorResponse); err != nil {
 			return AuthTokenResponse{}, fmt.Errorf("failed to parse body: %s", err.Error())
 		}
