@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -45,20 +46,30 @@ func TestAuthClient(t *testing.T) {
 		assert.Equal(t, 21600, response.ExpiresIn)
 		assert.Equal(t, "offline_access read write", response.Scope)
 		assert.Equal(t, 146322322, response.UserId)
-
 	})
 
 	t.Run("should call create auth with error", func(t *testing.T) {
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
-
 		httpmock.RegisterResponder(http.MethodPost, "http://mocktest/oauth/token",
 			httpmock.NewStringResponder(http.StatusBadRequest, authCodeResponseError))
 		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest")
 
 		_, err := client.CreateToken("TG-648f8999952b710001817e36-146322322")
 
-		assert.Error(t, err, "status code: 400")
+		assert.EqualError(t, err, "status code: 400")
 
+	})
+
+	t.Run("should return an error when unable to make the request", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder(http.MethodPost, "http://mocktest/oauth/token",
+			httpmock.NewErrorResponder(errors.New("bla")))
+		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest")
+
+		_, err := client.CreateToken("auth-code")
+		assert.EqualError(t, err, `failed to execute http request. Error: Post "http://mocktest/oauth/token": bla`)
 	})
 }
