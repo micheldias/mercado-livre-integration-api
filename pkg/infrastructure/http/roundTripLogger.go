@@ -22,7 +22,9 @@ func (r *RoundTripperLogger) RoundTrip(request *http.Request) (*http.Response, e
 	}
 	response, err := r.Inner.RoundTrip(request)
 	if err != nil {
-		logger.Error("error in request", "error", err.Error())
+		if ok {
+			logger.Error("error in request", "error", err.Error())
+		}
 		return response, err
 	}
 	if ok {
