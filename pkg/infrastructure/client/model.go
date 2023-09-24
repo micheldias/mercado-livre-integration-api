@@ -36,17 +36,17 @@ type Phone struct {
 }
 
 type Transaction struct {
-	Period    string `json:"period"`
-	Total     int    `json:"total"`
-	Completed int    `json:"completed"`
-	Canceled  int    `json:"canceled"`
-	Ratings   struct {
-		Positive int `json:"positive"`
-		Negative int `json:"negative"`
-		Neutral  int `json:"neutral"`
-	} `json:"ratings"`
+	Period    string  `json:"period"`
+	Total     int     `json:"total"`
+	Completed int     `json:"completed"`
+	Canceled  int     `json:"canceled"`
+	Ratings   Ratings `json:"ratings"`
 }
-
+type Ratings struct {
+	Positive int `json:"positive"`
+	Negative int `json:"negative"`
+	Neutral  int `json:"neutral"`
+}
 type SalesReputation struct {
 	LevelID           string      `json:"level_id"`
 	PowerSellerStatus string      `json:"power_seller_status"`
@@ -90,40 +90,43 @@ type User struct {
 }
 
 type Status struct {
-	SiteStatus string `json:"site_status"`
-	List       struct {
-		Allow            bool          `json:"allow"`
-		Codes            []interface{} `json:"codes"`
-		ImmediatePayment struct {
-			Required bool          `json:"required"`
-			Reasons  []interface{} `json:"reasons"`
-		} `json:"immediate_payment"`
-	} `json:"list"`
-	Buy struct {
-		Allow            bool          `json:"allow"`
-		Codes            []interface{} `json:"codes"`
-		ImmediatePayment struct {
-			Required bool          `json:"required"`
-			Reasons  []interface{} `json:"reasons"`
-		} `json:"immediate_payment"`
-	} `json:"buy"`
-	Sell struct {
-		Allow            bool          `json:"allow"`
-		Codes            []interface{} `json:"codes"`
-		ImmediatePayment struct {
-			Required bool          `json:"required"`
-			Reasons  []interface{} `json:"reasons"`
-		} `json:"immediate_payment"`
-	} `json:"sell"`
-	Billing struct {
-		Allow bool          `json:"allow"`
-		Codes []interface{} `json:"codes"`
-	} `json:"billing"`
-	MercadopagoTcAccepted  bool   `json:"mercadopago_tc_accepted"`
-	MercadopagoAccountType string `json:"mercadopago_account_type"`
-	Mercadoenvios          string `json:"mercadoenvios"`
-	ImmediatePayment       bool   `json:"immediate_payment"`
-	ConfirmedEmail         bool   `json:"confirmed_email"`
-	UserType               string `json:"user_type"`
-	RequiredAction         string `json:"required_action"`
+	SiteStatus             string  `json:"site_status"`
+	List                   List    `json:"list"`
+	Buy                    Buy     `json:"buy"`
+	Sell                   Sell    `json:"sell"`
+	Billing                Billing `json:"billing"`
+	MercadopagoTcAccepted  bool    `json:"mercadopago_tc_accepted"`
+	MercadopagoAccountType string  `json:"mercadopago_account_type"`
+	Mercadoenvios          string  `json:"mercadoenvios"`
+	ImmediatePayment       bool    `json:"immediate_payment"`
+	ConfirmedEmail         bool    `json:"confirmed_email"`
+	UserType               string  `json:"user_type"`
+	RequiredAction         string  `json:"required_action"`
+}
+
+type Buy struct {
+	Allow            bool             `json:"allow"`
+	Codes            []interface{}    `json:"codes"`
+	ImmediatePayment ImmediatePayment `json:"immediate_payment"`
+}
+
+type Sell struct {
+	Allow            bool             `json:"allow"`
+	Codes            []interface{}    `json:"codes"`
+	ImmediatePayment ImmediatePayment `json:"immediate_payment"`
+}
+
+type ImmediatePayment struct {
+	Required bool          `json:"required"`
+	Reasons  []interface{} `json:"reasons"`
+}
+type Billing struct {
+	Allow bool          `json:"allow"`
+	Codes []interface{} `json:"codes"`
+}
+
+type List struct {
+	Allow            bool             `json:"allow"`
+	Codes            []interface{}    `json:"codes"`
+	ImmediatePayment ImmediatePayment `json:"immediate_payment"`
 }
