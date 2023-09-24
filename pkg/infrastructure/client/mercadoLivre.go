@@ -45,25 +45,7 @@ func (m mercadoLivre) GetUser(userID string) (User, error) {
 		return User{}, fmt.Errorf("failed to create http request: %s ", err.Error())
 	}
 	request.Header.Add("content-type", "application/json")
-
-	response, err := m.httpClient.Do(request)
-
-	if err != nil {
-		return User{}, fmt.Errorf("failed to execute http request: %s", err.Error())
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		errorResponse := &Error{}
-		if err = json.NewDecoder(response.Body).Decode(&errorResponse); err != nil {
-			return User{}, fmt.Errorf("failed to parse body: %s", err.Error())
-		}
-		return User{}, fmt.Errorf("status code: %d", response.StatusCode)
-	}
-	user := User{}
-	if err = json.NewDecoder(response.Body).Decode(&user); err != nil {
-		return User{}, fmt.Errorf("failed to parse response: %s", err.Error())
-	}
+	user, err := makeRequestAndConvertResponseBody[User](m, request)
 	return user, err
 }
 
@@ -85,24 +67,7 @@ func (m mercadoLivre) requestToken(body *strings.Reader) (AuthTokenResponse, err
 		return AuthTokenResponse{}, fmt.Errorf("failed to create http request: %s ", err.Error())
 	}
 	request.Header.Add("content-type", "application/x-www-form-urlencoded")
-
-	response, err := m.httpClient.Do(request)
-	if err != nil {
-		return AuthTokenResponse{}, fmt.Errorf("failed to execute http request: %s", err.Error())
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		errorResponse := &Error{}
-		if err = json.NewDecoder(response.Body).Decode(&errorResponse); err != nil {
-			return AuthTokenResponse{}, fmt.Errorf("failed to parse body: %s", err.Error())
-		}
-		return AuthTokenResponse{}, fmt.Errorf("status code: %d", response.StatusCode)
-	}
-	token := AuthTokenResponse{}
-	if err = json.NewDecoder(response.Body).Decode(&token); err != nil {
-		return AuthTokenResponse{}, fmt.Errorf("failed to parse response: %s", err.Error())
-	}
+	token, err := makeRequestAndConvertResponseBody[AuthTokenResponse](m, request)
 	return token, err
 }
 
@@ -125,6 +90,28 @@ func (m mercadoLivre) buildTokenBodyFields() url.Values {
 	data.Set("client_id", m.clientID)
 	data.Set("client_secret", m.clientSecret)
 	return data
+}
+
+func makeRequestAndConvertResponseBody[T any](m mercadoLivre, request *http.Request) (T, error) {
+	var base T
+
+	response, err := m.httpClient.Do(request)
+	if err != nil {
+		return base, fmt.Errorf("failed to execute http request. Error: %s", err.Error())
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		errorResponse := &Error{}
+		if err := json.NewDecoder(response.Body).Decode(&errorResponse); err != nil {
+			return base, fmt.Errorf("failed to parse body: %s", err.Error())
+		}
+		return base, fmt.Errorf("status code: %d", response.StatusCode)
+	}
+
+	if err := json.NewDecoder(response.Body).Decode(&base); err != nil {
+		return base, fmt.Errorf("failed to parse response: %s", err.Error())
+	}
+	return base, nil
 }
 
 var _ MercadoLivre = (*mercadoLivre)(nil)
