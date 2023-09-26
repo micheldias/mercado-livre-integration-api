@@ -7,26 +7,29 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type MercadoLivre interface {
 	CreateToken(authCode string) (*AuthTokenResponse, error)
-	CreateRefreshToken(refreshToken string) (*AuthTokenResponse, error)
 	GetUser(userID string) (User, error)
 }
 
 // NewMercadoLivre creates a new Mercado Livre client
-func NewMercadoLivre(clientID, secret, redirectUrl, url string) MercadoLivre {
+func NewMercadoLivre(clientID, secret, redirectUrl, url string, executeTimes time.Duration) MercadoLivre {
 	client := &mercadoLivre{
 		url:          url,
 		clientID:     clientID,
 		clientSecret: secret,
 		redirectUrl:  redirectUrl,
+		executeTimes: executeTimes,
 		httpClient: &http.Client{
 			Transport: &util.RoundTripperLogger{Inner: http.DefaultTransport},
 		},
-		Cache: make(map[string]string),
+		cache: make(map[string]AuthTokenResponse),
 	}
+
+	go client.refreshTokenTask()
 	return client
 }
 
@@ -36,7 +39,8 @@ type mercadoLivre struct {
 	clientSecret string
 	redirectUrl  string
 	httpClient   *http.Client
-	Cache        map[string]string
+	cache        map[string]AuthTokenResponse
+	executeTimes time.Duration
 }
 
 func (m mercadoLivre) GetUser(userID string) (User, error) {
@@ -52,13 +56,14 @@ func (m mercadoLivre) GetUser(userID string) (User, error) {
 func (m mercadoLivre) CreateToken(authCode string) (*AuthTokenResponse, error) {
 	body := m.toTokenBody(authCode)
 	tokenResponse, err := m.requestToken(body)
+	m.cache["refresh_token"] = tokenResponse
 	return &tokenResponse, err
 }
 
-func (m mercadoLivre) CreateRefreshToken(refreshToken string) (*AuthTokenResponse, error) {
+func (m mercadoLivre) refreshToken(refreshToken string) (AuthTokenResponse, error) {
 	body := m.toRefreshTokenBody(refreshToken)
 	tokenResponse, err := m.requestToken(body)
-	return &tokenResponse, err
+	return tokenResponse, err
 }
 
 func (m mercadoLivre) requestToken(body *strings.Reader) (AuthTokenResponse, error) {
@@ -112,6 +117,26 @@ func makeRequestAndConvertResponseBody[T any](m mercadoLivre, request *http.Requ
 		return base, fmt.Errorf("failed to parse response: %s", err.Error())
 	}
 	return base, nil
+}
+
+func (m mercadoLivre) refreshTokenTask() {
+	ticker := time.NewTicker(m.executeTimes)
+	go func() {
+		for range ticker.C {
+			refreshToken, ok := m.cache["refresh_token"]
+			if ok {
+				token, err := m.refreshToken(refreshToken.RefreshToken)
+				if err != nil {
+					fmt.Println("error ao fazer refresh de token")
+				}
+				m.cache["refresh_token"] = token
+			} else {
+				fmt.Println("refresh token nao localizado")
+			}
+
+		}
+	}()
+	//ticker.Stop()
 }
 
 var _ MercadoLivre = (*mercadoLivre)(nil)

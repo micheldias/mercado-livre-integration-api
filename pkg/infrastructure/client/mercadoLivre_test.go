@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+	"time"
 )
 
 const (
@@ -35,7 +36,7 @@ func TestAuthClient(t *testing.T) {
 		httpmock.RegisterResponder(http.MethodPost, "http://mocktest/oauth/token",
 			httpmock.NewStringResponder(http.StatusOK, authCodeResponse))
 
-		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest")
+		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
 
 		response, err := client.CreateToken("TG-648f8999952b710001817e36-146322322")
 
@@ -53,7 +54,7 @@ func TestAuthClient(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterResponder(http.MethodPost, "http://mocktest/oauth/token",
 			httpmock.NewStringResponder(http.StatusBadRequest, authCodeResponseError))
-		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest")
+		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
 
 		_, err := client.CreateToken("TG-648f8999952b710001817e36-146322322")
 
@@ -67,9 +68,32 @@ func TestAuthClient(t *testing.T) {
 
 		httpmock.RegisterResponder(http.MethodPost, "http://mocktest/oauth/token",
 			httpmock.NewErrorResponder(errors.New("bla")))
-		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest")
+		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
 
 		_, err := client.CreateToken("auth-code")
 		assert.EqualError(t, err, `failed to execute http request. Error: Post "http://mocktest/oauth/token": bla`)
 	})
 }
+
+//func TestName(t *testing.T) {
+//
+//	c := new(mockks.MLClientMock)
+//	authToken := &client.AuthTokenResponse{
+//		AccessToken:  "access_token",
+//		RefreshToken: "refresh_token",
+//		ExpiresIn:    10,
+//		Scope:        "scope",
+//		TokenType:    "token_type",
+//	}
+//
+//	c.On("CreateToken", "token").Return(authToken, nil)
+//
+//	s := NewToken(c, time.Second*1)
+//
+//	tokenResponse, err := s.CreateToken("token")
+//	//time.Sleep(time.Second * 5)
+//	assert.Equal(t, "access_token", tokenResponse.AccessToken)
+//	assert.Nil(t, err)
+//	assert.True(t, c.AssertExpectations(t))
+//
+//}
