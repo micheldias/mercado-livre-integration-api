@@ -23,16 +23,14 @@ func NewToken(mercadoLivreClient client.MercadoLivre) TokenService {
 }
 
 func (t token) Create(authCode string) (model.Token, error) {
-	token, err := t.mercadoLivreClient.CreateToken(authCode)
+	accessToken, err := t.mercadoLivreClient.CreateToken(authCode)
 	if err != nil {
 		return model.Token{}, err
 	}
 
-	domainToken := model.Token{
-		AccessToken:     token.AccessToken,
-		RefreshToken:    token.RefreshToken,
-		ExpireInSeconds: token.ExpiresIn,
-	}
-
-	return domainToken, err
+	return model.Token{
+		AccessToken:     accessToken.AccessToken,
+		RefreshToken:    accessToken.RefreshToken,
+		ExpireInSeconds: accessToken.ExpiresIn,
+	}, err
 }
