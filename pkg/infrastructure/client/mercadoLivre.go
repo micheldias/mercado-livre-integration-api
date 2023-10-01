@@ -11,7 +11,7 @@ import (
 )
 
 type MercadoLivre interface {
-	CreateToken(authCode string) (*AuthTokenResponse, error)
+	CreateToken(authCode string) (AuthTokenResponse, error)
 	GetUser(userID string) (User, error)
 }
 
@@ -53,11 +53,11 @@ func (m mercadoLivre) GetUser(userID string) (User, error) {
 	return user, err
 }
 
-func (m mercadoLivre) CreateToken(authCode string) (*AuthTokenResponse, error) {
+func (m mercadoLivre) CreateToken(authCode string) (AuthTokenResponse, error) {
 	body := m.toTokenBody(authCode)
 	tokenResponse, err := m.requestToken(body)
 	m.cache["refresh_token"] = tokenResponse
-	return &tokenResponse, err
+	return tokenResponse, err
 }
 
 func (m mercadoLivre) refreshToken(refreshToken string) (AuthTokenResponse, error) {
