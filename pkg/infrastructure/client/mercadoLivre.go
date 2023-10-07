@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	util "mercado-livre-integration/pkg/infrastructure/http"
@@ -13,6 +14,9 @@ import (
 type MercadoLivre interface {
 	CreateToken(authCode string) (AuthTokenResponse, error)
 	GetUser(userID string) (User, error)
+	GetSites() (Sites, error)
+	GetCategories(siteID string) (Categories, error)
+	CreateProduct(product ProductRequest) (ProductResponse, error)
 }
 
 // NewMercadoLivre creates a new Mercado Livre client
@@ -41,6 +45,44 @@ type mercadoLivre struct {
 	httpClient   *http.Client
 	cache        map[string]AuthTokenResponse
 	executeTimes time.Duration
+}
+
+func (m mercadoLivre) CreateProduct(product ProductRequest) (ProductResponse, error) {
+
+	body, err := json.Marshal(product)
+	if err != nil {
+		return ProductResponse{}, fmt.Errorf("serializing request body: %w", err)
+	}
+
+	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/items", m.url), bytes.NewReader(body))
+
+	var createdProduct ProductResponse
+	if err != nil {
+		return createdProduct, fmt.Errorf("failed to create http request: %s ", err.Error())
+	}
+	request.Header.Add("content-type", "application/json")
+	return makeRequestAndConvertResponseBody[ProductResponse](m, request)
+}
+
+func (m mercadoLivre) GetCategories(siteID string) (Categories, error) {
+	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/sites/%s/categories", m.url, siteID), nil)
+	var categories Categories
+	if err != nil {
+		return categories, fmt.Errorf("failed to create http request: %s ", err.Error())
+	}
+	request.Header.Add("content-type", "application/json")
+	return makeRequestAndConvertResponseBody[Categories](m, request)
+}
+
+func (m mercadoLivre) GetSites() (Sites, error) {
+	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/sites", m.url), nil)
+	var sites Sites
+	if err != nil {
+		return sites, fmt.Errorf("failed to create http request: %s ", err.Error())
+	}
+	request.Header.Add("content-type", "application/json")
+	user, err := makeRequestAndConvertResponseBody[Sites](m, request)
+	return user, err
 }
 
 func (m mercadoLivre) GetUser(userID string) (User, error) {

@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"fmt"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -25,6 +26,63 @@ const (
     "error_description": "Error validating grant. Your authorization code or refresh token may be expired or it was already used",
     "status": 400
 }`
+	getUserResponse = `{
+    "id": 1496809856,
+    "nickname": "TESTUSER2074800394",
+    "country_id": "AR",
+    "address": {
+        "city": "Palermo",
+        "state": "AR-C"
+    },
+    "user_type": "normal",
+    "site_id": "MLA",
+    "permalink": "http://perfil.mercadolibre.com.ar/TESTUSER2074800394",
+    "seller_reputation": {
+        "level_id": null,
+        "power_seller_status": null,
+        "transactions": {
+            "period": "historic",
+            "total": 0
+        }
+    },
+    "status": {
+        "site_status": "active"
+    }
+}`
+
+	getSitesResponse = `
+[
+    {
+        "default_currency_id": "CRC",
+        "id": "MCR",
+        "name": "Costa Rica"
+    },
+    {
+        "default_currency_id": "BRL",
+        "id": "MLB",
+        "name": "Brasil"
+    },
+    {
+        "default_currency_id": "HNL",
+        "id": "MHN",
+        "name": "Honduras"
+    }
+]`
+
+	getCategoriesResponse = `[
+    {
+        "id": "MLA5725",
+        "name": "Accesorios para Veículos"
+    },
+    {
+        "id": "MLA1512",
+        "name": "Agro"
+    },
+    {
+        "id": "MLA1403",
+        "name": "Alimentos y Bebidas"
+    }
+]`
 )
 
 func TestAuthClient(t *testing.T) {
@@ -72,6 +130,66 @@ func TestAuthClient(t *testing.T) {
 
 		_, err := client.CreateToken("auth-code")
 		assert.EqualError(t, err, `failed to execute http request. Error: Post "http://mocktest/oauth/token": bla`)
+	})
+}
+
+func TestGetUser(t *testing.T) {
+
+	t.Run("should call get users successfully", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("http://mocktest/users/%s", "12344"),
+			httpmock.NewStringResponder(http.StatusOK, getUserResponse))
+
+		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
+
+		user, err := client.GetUser("12344")
+
+		assert.Nil(t, err)
+		assert.Equal(t, 1496809856, user.ID)
+		assert.Equal(t, "active", user.Status.SiteStatus)
+	})
+}
+
+func TestGetSites(t *testing.T) {
+
+	t.Run("should call get sites successfully", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder(http.MethodGet, "http://mocktest/sites",
+			httpmock.NewStringResponder(http.StatusOK, getSitesResponse))
+
+		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
+
+		sites, err := client.GetSites()
+
+		assert.Nil(t, err)
+		assert.Equal(t, 3, len(sites))
+		assert.Equal(t, "MCR", sites[0].ID)
+		assert.Equal(t, "Costa Rica", sites[0].Name)
+		assert.Equal(t, "CRC", sites[0].DefaultCurrencyID)
+	})
+}
+
+func TestGetCategories(t *testing.T) {
+
+	t.Run("should call get vategories successfully", func(t *testing.T) {
+		httpmock.Activate()
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder(http.MethodGet, "http://mocktest/sites/MLB/categories",
+			httpmock.NewStringResponder(http.StatusOK, getCategoriesResponse))
+
+		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
+
+		categories, err := client.GetCategories("MLB")
+
+		assert.Nil(t, err)
+		assert.Equal(t, 3, len(categories))
+		assert.Equal(t, "MLA5725", categories[0].ID)
+		assert.Equal(t, "Accesorios para Veículos", categories[0].Name)
 	})
 }
 

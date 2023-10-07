@@ -1,5 +1,7 @@
 package client
 
+import "time"
+
 type AuthTokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
@@ -129,4 +131,197 @@ type List struct {
 	Allow            bool             `json:"allow"`
 	Codes            []interface{}    `json:"codes"`
 	ImmediatePayment ImmediatePayment `json:"immediate_payment"`
+}
+type Sites []Site
+
+type Site struct {
+	DefaultCurrencyID string `json:"default_currency_id"`
+	ID                string `json:"id"`
+	Name              string `json:"name"`
+}
+type Categories []Category
+type Category struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type ProductRequest struct {
+	Title             string      `json:"title"`
+	CategoryID        string      `json:"category_id"`
+	Price             int         `json:"price"`
+	CurrencyID        string      `json:"currency_id"`
+	AvailableQuantity int         `json:"available_quantity"`
+	BuyingMode        string      `json:"buying_mode"`
+	Condition         string      `json:"condition"`
+	ListingTypeID     string      `json:"listing_type_id"`
+	SaleTerms         []SaleTerm  `json:"sale_terms"`
+	Pictures          []Picture   `json:"pictures"`
+	Attributes        []Attribute `json:"attributes"`
+}
+
+type ProductResponse struct {
+	ID                           string        `json:"id"`
+	SiteID                       string        `json:"site_id"`
+	Title                        string        `json:"title"`
+	SellerID                     int           `json:"seller_id"`
+	CategoryID                   string        `json:"category_id"`
+	OfficialStoreID              interface{}   `json:"official_store_id"`
+	Price                        int           `json:"price"`
+	BasePrice                    int           `json:"base_price"`
+	OriginalPrice                interface{}   `json:"original_price"`
+	InventoryID                  interface{}   `json:"inventory_id"`
+	CurrencyID                   string        `json:"currency_id"`
+	InitialQuantity              int           `json:"initial_quantity"`
+	AvailableQuantity            int           `json:"available_quantity"`
+	SoldQuantity                 int           `json:"sold_quantity"`
+	SaleTerms                    []SaleTerm    `json:"sale_terms"`
+	BuyingMode                   string        `json:"buying_mode"`
+	ListingTypeID                string        `json:"listing_type_id"`
+	StartTime                    time.Time     `json:"start_time"`
+	StopTime                     time.Time     `json:"stop_time"`
+	EndTime                      time.Time     `json:"end_time"`
+	ExpirationTime               time.Time     `json:"expiration_time"`
+	Condition                    string        `json:"condition"`
+	Permalink                    string        `json:"permalink"`
+	Pictures                     []Picture     `json:"pictures"`
+	VideoID                      string        `json:"video_id"`
+	Descriptions                 []interface{} `json:"descriptions"`
+	AcceptsMercadopago           bool          `json:"accepts_mercadopago"`
+	NonMercadoPagoPaymentMethods []interface{} `json:"non_mercado_pago_payment_methods"`
+	Shipping                     Shipping      `json:"shipping"`
+	InternationalDeliveryMode    string        `json:"international_delivery_mode"`
+	SellerAddress                struct {
+		ID          int    `json:"id"`
+		Comment     string `json:"comment"`
+		AddressLine string `json:"address_line"`
+		ZipCode     string `json:"zip_code"`
+		City        struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"city"`
+		State struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"state"`
+		Country struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"country"`
+		Latitude       float64 `json:"latitude"`
+		Longitude      float64 `json:"longitude"`
+		SearchLocation struct {
+			Neighborhood struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
+			} `json:"neighborhood"`
+			City struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
+			} `json:"city"`
+			State struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
+			} `json:"state"`
+		} `json:"search_location"`
+	} `json:"seller_address"`
+	SellerContact     interface{}   `json:"seller_contact"`
+	Location          interface{}   `json:"location"`
+	Geolocation       Geolocation   `json:"geolocation"`
+	CoverageAreas     []interface{} `json:"coverage_areas"`
+	Attributes        []Attribute   `json:"attributes"`
+	ListingSource     string        `json:"listing_source"`
+	Variations        []interface{} `json:"variations"`
+	ThumbnailID       string        `json:"thumbnail_id"`
+	Thumbnail         string        `json:"thumbnail"`
+	Status            string        `json:"status"`
+	SubStatus         []interface{} `json:"sub_status"`
+	Tags              []string      `json:"tags"`
+	Warranty          string        `json:"warranty"`
+	CatalogProductID  interface{}   `json:"catalog_product_id"`
+	DomainID          string        `json:"domain_id"`
+	SellerCustomField interface{}   `json:"seller_custom_field"`
+	ParentItemID      interface{}   `json:"parent_item_id"`
+	DealIds           []interface{} `json:"deal_ids"`
+	AutomaticRelist   bool          `json:"automatic_relist"`
+	DateCreated       time.Time     `json:"date_created"`
+	LastUpdated       time.Time     `json:"last_updated"`
+	Health            interface{}   `json:"health"`
+	CatalogListing    bool          `json:"catalog_listing"`
+	ItemRelations     []interface{} `json:"item_relations"`
+}
+
+type Attribute struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	ValueID   string `json:"value_id"`
+	ValueName string `json:"value_name"`
+}
+
+type Picture struct {
+	Source    string `json:"source"`
+	ID        string `json:"id"`
+	URL       string `json:"url"`
+	SecureURL string `json:"secure_url"`
+	Size      string `json:"size"`
+	MaxSize   string `json:"max_size"`
+	Quality   string `json:"quality"`
+}
+
+type SaleTerm struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	ValueID   string `json:"value_id"`
+	ValueName string `json:"value_name"`
+}
+
+type Shipping struct {
+	Mode         string        `json:"mode"`
+	LocalPickUp  bool          `json:"local_pick_up"`
+	FreeShipping bool          `json:"free_shipping"`
+	Methods      []interface{} `json:"methods"`
+	Dimensions   interface{}   `json:"dimensions"`
+	Tags         []interface{} `json:"tags"`
+	LogisticType string        `json:"logistic_type"`
+	StorePickUp  bool          `json:"store_pick_up"`
+}
+
+type Geolocation struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+type SellerAddress struct {
+	ID             int           `json:"id"`
+	Comment        string        `json:"comment"`
+	AddressLine    string        `json:"address_line"`
+	ZipCode        string        `json:"zip_code"`
+	City           SellerCity    `json:"city"`
+	State          SellerState   `json:"state"`
+	Country        SellerCountry `json:"country"`
+	Latitude       float64       `json:"latitude"`
+	Longitude      float64       `json:"longitude"`
+	SearchLocation struct {
+		Neighborhood SellerNeighborhood `json:"neighborhood"`
+		City         SellerCity         `json:"city"`
+		State        SellerState        `json:"state"`
+	} `json:"search_location"`
+}
+
+type SellerNeighborhood struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+type SellerCity struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type SellerState struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type SellerCountry struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
