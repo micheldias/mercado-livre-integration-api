@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	util "mercado-livre-integration/pkg/infrastructure/http"
+	util "mercado-livre-integration/internal/infrastructure/http"
 	"net/http"
 	"net/url"
 	"strings"
@@ -60,7 +60,7 @@ func (m mercadoLivre) CreateProduct(product ProductRequest) (ProductResponse, er
 	if err != nil {
 		return createdProduct, fmt.Errorf("failed to create http request: %s ", err.Error())
 	}
-	request.Header.Add("content-type", "application/json")
+	request.Header.Add("content-type", "handler/json")
 	return makeRequestAndConvertResponseBody[ProductResponse](m, request)
 }
 
@@ -70,7 +70,7 @@ func (m mercadoLivre) GetCategories(siteID string) (Categories, error) {
 	if err != nil {
 		return categories, fmt.Errorf("failed to create http request: %s ", err.Error())
 	}
-	request.Header.Add("content-type", "application/json")
+	request.Header.Add("content-type", "handler/json")
 	return makeRequestAndConvertResponseBody[Categories](m, request)
 }
 
@@ -80,7 +80,7 @@ func (m mercadoLivre) GetSites() (Sites, error) {
 	if err != nil {
 		return sites, fmt.Errorf("failed to create http request: %s ", err.Error())
 	}
-	request.Header.Add("content-type", "application/json")
+	request.Header.Add("content-type", "handler/json")
 	user, err := makeRequestAndConvertResponseBody[Sites](m, request)
 	return user, err
 }
@@ -90,7 +90,7 @@ func (m mercadoLivre) GetUser(userID string) (User, error) {
 	if err != nil {
 		return User{}, fmt.Errorf("failed to create http request: %s ", err.Error())
 	}
-	request.Header.Add("content-type", "application/json")
+	request.Header.Add("content-type", "handler/json")
 	user, err := makeRequestAndConvertResponseBody[User](m, request)
 	return user, err
 }
@@ -113,7 +113,7 @@ func (m mercadoLivre) requestToken(body *strings.Reader) (AuthTokenResponse, err
 	if err != nil {
 		return AuthTokenResponse{}, fmt.Errorf("failed to create http request: %s ", err.Error())
 	}
-	request.Header.Add("content-type", "application/x-www-form-urlencoded")
+	request.Header.Add("content-type", "handler/x-www-form-urlencoded")
 	token, err := makeRequestAndConvertResponseBody[AuthTokenResponse](m, request)
 	return token, err
 }

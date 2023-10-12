@@ -1,7 +1,7 @@
 package util
 
 import (
-	contexthelper "mercado-livre-integration/pkg/infrastructure/contextHelper"
+	contexthelper "mercado-livre-integration/internal/infrastructure/contextHelper"
 	"net/http"
 	"net/http/httputil"
 )

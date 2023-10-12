@@ -2,7 +2,7 @@ package contexthelper
 
 import (
 	"context"
-	"mercado-livre-integration/pkg/infrastructure/log"
+	"mercado-livre-integration/internal/infrastructure/log"
 )
 
 type contextKey int

@@ -1,9 +1,8 @@
 package service
 
 import (
-	"mercado-livre-integration/pkg/domain/token/model"
-	"mercado-livre-integration/pkg/infrastructure/client"
-	"time"
+	"mercado-livre-integration/internal/infrastructure/client"
+	"mercado-livre-integration/internal/model"
 )
 
 type TokenService interface {
@@ -11,7 +10,6 @@ type TokenService interface {
 }
 type token struct {
 	mercadoLivreClient client.MercadoLivre
-	executeTimes       time.Duration
 }
 
 func NewToken(mercadoLivreClient client.MercadoLivre) TokenService {
