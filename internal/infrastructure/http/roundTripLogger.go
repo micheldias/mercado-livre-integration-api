@@ -18,7 +18,7 @@ func (r *RoundTripperLogger) RoundTrip(request *http.Request) (*http.Response, e
 		if err != nil {
 			logger.Warning("error when try to dump request", "error", err.Error())
 		}
-		logger.Info("sending request", string(dumpRequest))
+		logger.Info("sending request", "request", string(dumpRequest))
 	}
 	response, err := r.Inner.RoundTrip(request)
 	if err != nil {
@@ -33,7 +33,7 @@ func (r *RoundTripperLogger) RoundTrip(request *http.Request) (*http.Response, e
 			logger.Warning("error when try to dump response", "error", err.Error())
 
 		}
-		logger.Info("received response", string(dumpResponse))
+		logger.Info("received response", "response", string(dumpResponse))
 	}
 
 	return response, err
