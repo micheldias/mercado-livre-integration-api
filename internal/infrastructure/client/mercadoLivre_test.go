@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/jarcoal/httpmock"
@@ -96,7 +97,7 @@ func TestAuthClient(t *testing.T) {
 
 		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
 
-		response, err := client.CreateToken("TG-648f8999952b710001817e36-146322322")
+		response, err := client.CreateToken(context.Background(), "TG-648f8999952b710001817e36-146322322")
 
 		assert.Nil(t, err)
 		assert.Equal(t, "APP_USR-761615972200605-061812-79870010a2b5027f9bdd7500a00fe6f8-146322322", response.AccessToken)
@@ -114,7 +115,7 @@ func TestAuthClient(t *testing.T) {
 			httpmock.NewStringResponder(http.StatusBadRequest, authCodeResponseError))
 		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
 
-		_, err := client.CreateToken("TG-648f8999952b710001817e36-146322322")
+		_, err := client.CreateToken(context.Background(), "TG-648f8999952b710001817e36-146322322")
 
 		assert.EqualError(t, err, "status code: 400")
 
@@ -128,7 +129,7 @@ func TestAuthClient(t *testing.T) {
 			httpmock.NewErrorResponder(errors.New("bla")))
 		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
 
-		_, err := client.CreateToken("auth-code")
+		_, err := client.CreateToken(context.Background(), "auth-code")
 		assert.EqualError(t, err, `failed to execute http request. Error: Post "http://mocktest/oauth/token": bla`)
 	})
 }
@@ -144,7 +145,7 @@ func TestGetUser(t *testing.T) {
 
 		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
 
-		user, err := client.GetUser("12344")
+		user, err := client.GetUser(context.Background(), "12344")
 
 		assert.Nil(t, err)
 		assert.Equal(t, 1496809856, user.ID)
@@ -163,7 +164,7 @@ func TestGetSites(t *testing.T) {
 
 		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
 
-		sites, err := client.GetSites()
+		sites, err := client.GetSites(context.Background())
 
 		assert.Nil(t, err)
 		assert.Equal(t, 3, len(sites))
@@ -184,7 +185,7 @@ func TestGetCategories(t *testing.T) {
 
 		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
 
-		categories, err := client.GetCategories("MLB")
+		categories, err := client.GetCategories(context.Background(), "MLB")
 
 		assert.Nil(t, err)
 		assert.Equal(t, 3, len(categories))
