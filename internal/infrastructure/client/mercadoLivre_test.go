@@ -175,7 +175,7 @@ func TestGetSites(t *testing.T) {
 
 func TestGetCategories(t *testing.T) {
 
-	t.Run("should call get vategories successfully", func(t *testing.T) {
+	t.Run("should call get categories successfully", func(t *testing.T) {
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
 
