@@ -1,12 +1,13 @@
 package service
 
 import (
+	"context"
 	"mercado-livre-integration/internal/infrastructure/client"
 	"mercado-livre-integration/internal/model"
 )
 
 type CategoryService interface {
-	GetCategories(siteID string) (model.Categories, error)
+	GetCategories(ctx context.Context, siteID string) (model.Categories, error)
 }
 
 type category struct {
@@ -20,8 +21,8 @@ func NewCategory(mercadoLivreClient client.MercadoLivre) CategoryService {
 
 }
 
-func (c category) GetCategories(siteID string) (categories model.Categories, err error) {
-	mlCategories, err := c.mercadoLivreClient.GetCategories(siteID)
+func (c category) GetCategories(ctx context.Context, siteID string) (categories model.Categories, err error) {
+	mlCategories, err := c.mercadoLivreClient.GetCategories(ctx, siteID)
 	if err != nil {
 		return categories, err
 	}

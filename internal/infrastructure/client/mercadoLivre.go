@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	util "mercado-livre-integration/internal/infrastructure/http"
@@ -12,11 +13,11 @@ import (
 )
 
 type MercadoLivre interface {
-	CreateToken(authCode string) (AuthTokenResponse, error)
-	GetUser(userID string) (User, error)
-	GetSites() (Sites, error)
-	GetCategories(siteID string) (Categories, error)
-	CreateProduct(product ProductRequest) (ProductResponse, error)
+	CreateToken(ctx context.Context, authCode string) (AuthTokenResponse, error)
+	GetUser(ctx context.Context, userID string) (User, error)
+	GetSites(ctx context.Context) (Sites, error)
+	GetCategories(ctx context.Context, siteID string) (Categories, error)
+	CreateProduct(ctx context.Context, product ProductRequest) (ProductResponse, error)
 }
 
 // NewMercadoLivre creates a new Mercado Livre client
@@ -47,7 +48,7 @@ type mercadoLivre struct {
 	executeTimes time.Duration
 }
 
-func (m mercadoLivre) CreateProduct(product ProductRequest) (ProductResponse, error) {
+func (m mercadoLivre) CreateProduct(ctx context.Context, product ProductRequest) (ProductResponse, error) {
 
 	body, err := json.Marshal(product)
 	if err != nil {
@@ -64,7 +65,7 @@ func (m mercadoLivre) CreateProduct(product ProductRequest) (ProductResponse, er
 	return makeRequestAndConvertResponseBody[ProductResponse](m, request)
 }
 
-func (m mercadoLivre) GetCategories(siteID string) (Categories, error) {
+func (m mercadoLivre) GetCategories(ctx context.Context, siteID string) (Categories, error) {
 	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/sites/%s/categories", m.url, siteID), nil)
 	var categories Categories
 	if err != nil {
@@ -74,7 +75,7 @@ func (m mercadoLivre) GetCategories(siteID string) (Categories, error) {
 	return makeRequestAndConvertResponseBody[Categories](m, request)
 }
 
-func (m mercadoLivre) GetSites() (Sites, error) {
+func (m mercadoLivre) GetSites(ctx context.Context) (Sites, error) {
 	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/sites", m.url), nil)
 	var sites Sites
 	if err != nil {
@@ -85,7 +86,7 @@ func (m mercadoLivre) GetSites() (Sites, error) {
 	return user, err
 }
 
-func (m mercadoLivre) GetUser(userID string) (User, error) {
+func (m mercadoLivre) GetUser(ctx context.Context, userID string) (User, error) {
 	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/users/%s", m.url, userID), nil)
 	if err != nil {
 		return User{}, fmt.Errorf("failed to create http request: %s ", err.Error())
@@ -95,21 +96,21 @@ func (m mercadoLivre) GetUser(userID string) (User, error) {
 	return user, err
 }
 
-func (m mercadoLivre) CreateToken(authCode string) (AuthTokenResponse, error) {
+func (m mercadoLivre) CreateToken(ctx context.Context, authCode string) (AuthTokenResponse, error) {
 	body := m.toTokenBody(authCode)
-	tokenResponse, err := m.requestToken(body)
+	tokenResponse, err := m.requestToken(ctx, body)
 	m.cache["refresh_token"] = tokenResponse
 	return tokenResponse, err
 }
 
 func (m mercadoLivre) refreshToken(refreshToken string) (AuthTokenResponse, error) {
 	body := m.toRefreshTokenBody(refreshToken)
-	tokenResponse, err := m.requestToken(body)
+	tokenResponse, err := m.requestToken(context.Background(), body)
 	return tokenResponse, err
 }
 
-func (m mercadoLivre) requestToken(body *strings.Reader) (AuthTokenResponse, error) {
-	request, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/oauth/token", m.url), body)
+func (m mercadoLivre) requestToken(ctx context.Context, body *strings.Reader) (AuthTokenResponse, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s/oauth/token", m.url), body)
 	if err != nil {
 		return AuthTokenResponse{}, fmt.Errorf("failed to create http request: %s ", err.Error())
 	}

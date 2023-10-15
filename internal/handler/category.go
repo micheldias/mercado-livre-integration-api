@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	contexthelper "mercado-livre-integration/internal/infrastructure/contextHelper"
+	logs "mercado-livre-integration/internal/infrastructure/log"
 	"mercado-livre-integration/internal/service"
 	"net/http"
 )
@@ -22,9 +24,12 @@ type categoryHandler struct {
 }
 
 func (c categoryHandler) GetCategories(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logs.New("mercado-livre-api")
+	ctx = contexthelper.SetLogger(ctx, logger)
 	vars := mux.Vars(r)
 	siteID := vars["siteID"]
-	categories, err := c.CategoryService.GetCategories(siteID)
+	categories, err := c.CategoryService.GetCategories(ctx, siteID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
