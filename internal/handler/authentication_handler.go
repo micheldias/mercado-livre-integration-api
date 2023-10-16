@@ -11,21 +11,25 @@ import (
 type tokenRequest struct {
 	AuthCode string `json:"authCode"`
 }
-type Token interface {
+type urlResponse struct {
+	Url string `json:"url"`
+}
+type Authentication interface {
 	Create(w http.ResponseWriter, r *http.Request)
+	GetUrlAuthentication(w http.ResponseWriter, r *http.Request)
 }
 
-func NewToken(tokenService service.TokenService) Token {
-	return tokenHandler{
-		TokenService: tokenService,
+func NewToken(tokenService service.AuthenticationService) Authentication {
+	return authHandler{
+		AuthenticationService: tokenService,
 	}
 }
 
-type tokenHandler struct {
-	TokenService service.TokenService
+type authHandler struct {
+	AuthenticationService service.AuthenticationService
 }
 
-func (t tokenHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (t authHandler) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	ctx := r.Context()
 	logger := logs.New("mercado-livre-api")
@@ -37,11 +41,21 @@ func (t tokenHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := t.TokenService.Create(ctx, payload.AuthCode)
+	token, err := t.AuthenticationService.Create(ctx, payload.AuthCode)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	response, _ := json.Marshal(token)
 	w.WriteHeader(http.StatusCreated)
+	w.Write(response)
+}
+
+func (t authHandler) GetUrlAuthentication(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	logger := logs.New("mercado-livre-api")
+	ctx := contexthelper.SetLogger(r.Context(), logger)
+	url := t.AuthenticationService.GetUrlAuthentication(ctx)
+
+	response, _ := json.Marshal(urlResponse{Url: url})
 	w.Write(response)
 }
