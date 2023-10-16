@@ -10,7 +10,6 @@ import (
 	"mercado-livre-integration/internal/infrastructure/client"
 	"mercado-livre-integration/internal/service"
 	"net/http"
-	"time"
 )
 
 func init() {
@@ -34,19 +33,20 @@ func main() {
 	categoryService := service.NewCategory(client)
 	categoryHandler := handler.NewCategory(categoryService)
 
-	tokenService := service.NewToken(client)
+	tokenService := service.NewAuthenticationService(client)
 	tokenHandler := handler.NewToken(tokenService)
 	r := mux.NewRouter()
 	r.HandleFunc("/health", HealthCheckHandler).Methods(http.MethodGet)
 	s := r.PathPrefix("/api/v1/").Subrouter()
 	s.HandleFunc("sites/{siteID}/categories", categoryHandler.GetCategories).Methods(http.MethodGet)
 	s.HandleFunc("/tokens", tokenHandler.Create).Methods(http.MethodPost)
+	s.HandleFunc("/auth/url", tokenHandler.GetUrlAuthentication).Methods(http.MethodGet)
 
 	srv := &http.Server{
 		Handler:      r,
-		Addr:         ":8080",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		Addr:         fmt.Sprintf(":%s", viper.GetString("SERVER_PORT")),
+		WriteTimeout: viper.GetDuration("SERVER_WRITE_TIMEOUT"),
+		ReadTimeout:  viper.GetDuration("SERVER_READ_TIMEOUT"),
 	}
 
 	log.Fatal(srv.ListenAndServe())
