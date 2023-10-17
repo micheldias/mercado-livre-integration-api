@@ -1,25 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 	"io"
-	"log"
 	handler "mercado-livre-integration/internal/handler"
 	"mercado-livre-integration/internal/infrastructure/client"
+	"mercado-livre-integration/internal/infrastructure/server"
 	"mercado-livre-integration/internal/service"
 	"net/http"
 )
 
 func init() {
-	viper.SetConfigName("application")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("fatal error config file: %w", err))
-	}
+	server.LoadEnvVars()
 }
 
 func main() {
@@ -30,26 +22,20 @@ func main() {
 		viper.GetString("MERCADO_LIVRE_API_URL"),
 		viper.GetDuration("MERCADO_LIVRE_EXECUTE_TIMES"),
 	)
-	categoryService := service.NewCategory(client)
-	categoryHandler := handler.NewCategory(categoryService)
 
-	tokenService := service.NewAuthenticationService(client)
-	tokenHandler := handler.NewToken(tokenService)
-	r := mux.NewRouter()
-	r.HandleFunc("/health", HealthCheckHandler).Methods(http.MethodGet)
-	s := r.PathPrefix("/api/v1/").Subrouter()
-	s.HandleFunc("sites/{siteID}/categories", categoryHandler.GetCategories).Methods(http.MethodGet)
-	s.HandleFunc("/tokens", tokenHandler.Create).Methods(http.MethodPost)
-	s.HandleFunc("/auth/url", tokenHandler.GetUrlAuthentication).Methods(http.MethodGet)
+	categoryHandler := handler.NewCategory(service.NewCategory(client))
+	tokenHandler := handler.NewToken(service.NewAuthenticationService(client))
 
-	srv := &http.Server{
-		Handler:      r,
-		Addr:         fmt.Sprintf(":%s", viper.GetString("SERVER_PORT")),
-		WriteTimeout: viper.GetDuration("SERVER_WRITE_TIMEOUT"),
-		ReadTimeout:  viper.GetDuration("SERVER_READ_TIMEOUT"),
-	}
+	server.Builder().
+		Use(server.InjectLoggerMiddleware).
+		Use(server.LogRequestMiddleware).
+		Use(server.LogRequestMiddleware).
+		AddRouter("/health", http.MethodGet, HealthCheckHandler).
+		AddRouter("/api/v1/sites/{siteID}/categories", http.MethodGet, categoryHandler.GetCategories).
+		AddRouter("/api/v1/tokens", http.MethodPost, tokenHandler.Create).
+		AddRouter("/api/v1/auth/url", http.MethodGet, tokenHandler.GetUrlAuthentication).
+		StartServer()
 
-	log.Fatal(srv.ListenAndServe())
 }
 
 func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
