@@ -27,9 +27,8 @@ func main() {
 	tokenHandler := handler.NewToken(service.NewAuthenticationService(client))
 
 	server.Builder().
-		Use(server.InjectLoggerMiddleware).
-		Use(server.LogRequestMiddleware).
-		Use(server.LogRequestMiddleware).
+		Use(server.InjectRequestID).
+		Use(server.InjectLogger).
 		AddRouter("/health", http.MethodGet, HealthCheckHandler).
 		AddRouter("/api/v1/sites/{siteID}/categories", http.MethodGet, categoryHandler.GetCategories).
 		AddRouter("/api/v1/tokens", http.MethodPost, tokenHandler.Create).

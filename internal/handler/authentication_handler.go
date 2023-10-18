@@ -52,10 +52,8 @@ func (t authHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 func (t authHandler) GetUrlAuthentication(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	logger := logs.New("mercado-livre-api")
-	ctx := contexthelper.SetLogger(r.Context(), logger)
+	ctx := r.Context()
 	url := t.AuthenticationService.GetUrlAuthentication(ctx)
-
 	response, _ := json.Marshal(urlResponse{Url: url})
 	w.Write(response)
 }
