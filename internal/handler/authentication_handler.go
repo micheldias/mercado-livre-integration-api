@@ -47,7 +47,6 @@ func (t authHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t authHandler) GetUrlAuthentication(w http.ResponseWriter, r *http.Request) {
-	panic("Hey I'm in panic")
 	w.Header().Add("Content-Type", "application/json")
 	ctx := r.Context()
 	url := t.AuthenticationService.GetUrlAuthentication(ctx)

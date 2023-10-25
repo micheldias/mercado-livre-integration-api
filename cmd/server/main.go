@@ -2,8 +2,7 @@ package main
 
 import (
 	"github.com/spf13/viper"
-	"io"
-	handler "mercado-livre-integration/internal/handler"
+	"mercado-livre-integration/internal/handler"
 	"mercado-livre-integration/internal/infrastructure/client"
 	"mercado-livre-integration/internal/infrastructure/server"
 	"mercado-livre-integration/internal/service"
@@ -26,25 +25,13 @@ func main() {
 	categoryHandler := handler.NewCategory(service.NewCategory(client))
 	tokenHandler := handler.NewToken(service.NewAuthenticationService(client))
 
-	server.Builder().
+	server.NewWebServerBuilder().
 		Use(server.InjectRequestID).
 		Use(server.InjectLogger).
 		Use(server.HandlePanic).
-		//TODO: move this to inside the builder
-		AddRouter("/health", http.MethodGet, HealthCheckHandler).
 		AddRouter("/api/v1/sites/{siteID}/categories", http.MethodGet, categoryHandler.GetCategories).
 		AddRouter("/api/v1/tokens", http.MethodPost, tokenHandler.Create).
 		AddRouter("/api/v1/auth/url", http.MethodGet, tokenHandler.GetUrlAuthentication).
 		StartServer()
 
-}
-
-func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	// A very simple health check.
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	// In the future we could report back on the status of our DB, or our cache
-	// (e.g. Redis) by performing a simple PING, and include them in the response.
-	io.WriteString(w, `{"alive": true}`)
 }
