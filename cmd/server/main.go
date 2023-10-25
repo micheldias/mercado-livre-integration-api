@@ -29,6 +29,8 @@ func main() {
 	server.Builder().
 		Use(server.InjectRequestID).
 		Use(server.InjectLogger).
+		Use(server.HandlePanic).
+		//TODO: move this to inside the builder
 		AddRouter("/health", http.MethodGet, HealthCheckHandler).
 		AddRouter("/api/v1/sites/{siteID}/categories", http.MethodGet, categoryHandler.GetCategories).
 		AddRouter("/api/v1/tokens", http.MethodPost, tokenHandler.Create).

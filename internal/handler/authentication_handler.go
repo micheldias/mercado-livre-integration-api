@@ -2,8 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	contexthelper "mercado-livre-integration/internal/infrastructure/contextHelper"
-	logs "mercado-livre-integration/internal/infrastructure/log"
 	"mercado-livre-integration/internal/service"
 	"net/http"
 )
@@ -32,8 +30,6 @@ type authHandler struct {
 func (t authHandler) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	ctx := r.Context()
-	logger := logs.New("mercado-livre-api")
-	ctx = contexthelper.SetLogger(ctx, logger)
 
 	var payload tokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -51,6 +47,7 @@ func (t authHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t authHandler) GetUrlAuthentication(w http.ResponseWriter, r *http.Request) {
+	panic("Hey I'm in panic")
 	w.Header().Add("Content-Type", "application/json")
 	ctx := r.Context()
 	url := t.AuthenticationService.GetUrlAuthentication(ctx)
