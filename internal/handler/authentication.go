@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"mercado-livre-integration/internal/infrastructure/server"
 	"mercado-livre-integration/internal/service"
 	"net/http"
 )
@@ -9,12 +10,12 @@ import (
 type tokenRequest struct {
 	AuthCode string `json:"authCode"`
 }
-type urlResponse struct {
+type UrlResponse struct {
 	Url string `json:"url"`
 }
 type Authentication interface {
-	Create(w http.ResponseWriter, r *http.Request)
-	GetUrlAuthentication(w http.ResponseWriter, r *http.Request)
+	Create(request *http.Request) (server.HttpResponse, error)
+	GetUrlAuthentication(request *http.Request) (server.HttpResponse, error)
 }
 
 func NewToken(tokenService service.AuthenticationService) Authentication {
@@ -27,29 +28,31 @@ type authHandler struct {
 	AuthenticationService service.AuthenticationService
 }
 
-func (t authHandler) Create(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
+func (t authHandler) Create(r *http.Request) (server.HttpResponse, error) {
 	ctx := r.Context()
 
 	var payload tokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return server.HttpResponse{}, err
 	}
 
 	token, err := t.AuthenticationService.Create(ctx, payload.AuthCode)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		return server.HttpResponse{}, err
 	}
-	response, _ := json.Marshal(token)
-	w.WriteHeader(http.StatusCreated)
-	w.Write(response)
+	return server.HttpResponse{
+		StatusCode: http.StatusCreated,
+		Body:       token,
+	}, nil
 }
 
-func (t authHandler) GetUrlAuthentication(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-	ctx := r.Context()
+func (t authHandler) GetUrlAuthentication(request *http.Request) (server.HttpResponse, error) {
+	panic("uata fucky!!!")
+	ctx := request.Context()
 	url := t.AuthenticationService.GetUrlAuthentication(ctx)
-	response, _ := json.Marshal(urlResponse{Url: url})
-	w.Write(response)
+
+	return server.HttpResponse{
+		StatusCode: 200,
+		Body:       UrlResponse{Url: url},
+	}, nil
 }

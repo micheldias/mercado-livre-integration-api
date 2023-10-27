@@ -1,13 +1,16 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 	"io"
+	contexthelper "mercado-livre-integration/internal/infrastructure/contextHelper"
 	logs "mercado-livre-integration/internal/infrastructure/log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func LoadEnvVars() {
@@ -20,7 +23,7 @@ func LoadEnvVars() {
 }
 
 type WebServerBuilder interface {
-	AddRouter(path, method string, handler func(w http.ResponseWriter, r *http.Request)) WebServerBuilder
+	AddRouter(path, method string, handler func(r *http.Request) (HttpResponse, error)) WebServerBuilder
 	Use(func(http.Handler) http.Handler) WebServerBuilder
 	StartServer()
 }
@@ -37,8 +40,8 @@ type server struct {
 	Router *mux.Router
 }
 
-func (s server) AddRouter(path, method string, handler func(w http.ResponseWriter, r *http.Request)) WebServerBuilder {
-	s.Router.HandleFunc(path, handler).Methods(method)
+func (s server) AddRouter(path, method string, handler func(r *http.Request) (HttpResponse, error)) WebServerBuilder {
+	s.Router.HandleFunc(path, errorHandler(handler)).Methods(method)
 	s.Router.Use()
 	return s
 }
@@ -72,4 +75,29 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	// In the future we could report back on the status of our DB, or our cache
 	// (e.g. Redis) by performing a simple PING, and include them in the response.
 	io.WriteString(w, `{"alive": true}`)
+}
+
+type HttpResponse struct {
+	StatusCode int
+	Body       any
+}
+
+func errorHandler(fn func(r *http.Request) (HttpResponse, error)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		ctx := r.Context()
+		startTime := time.Now()
+		logger, _ := contexthelper.GetLogger(ctx)
+		logger.Info("request received", "path", r.RequestURI, "method", r.Method)
+		response, err := fn(r)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			logger.Info("request finished", "response_time", time.Since(startTime).Milliseconds())
+			return
+		}
+		responseBody, _ := json.Marshal(response.Body)
+		w.WriteHeader(response.StatusCode)
+		w.Write(responseBody)
+		logger.Info("request finished", "path", r.RequestURI, "method", r.Method, "response_time", time.Since(startTime).Milliseconds())
+	}
 }

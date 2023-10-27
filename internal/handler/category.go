@@ -1,14 +1,14 @@
 package handler
 
 import (
-	"encoding/json"
 	"github.com/gorilla/mux"
+	"mercado-livre-integration/internal/infrastructure/server"
 	"mercado-livre-integration/internal/service"
 	"net/http"
 )
 
 type CategoryHandler interface {
-	GetCategories(w http.ResponseWriter, r *http.Request)
+	GetCategories(request *http.Request) (server.HttpResponse, error)
 }
 
 func NewCategory(categoryService service.CategoryService) CategoryHandler {
@@ -21,16 +21,18 @@ type categoryHandler struct {
 	CategoryService service.CategoryService
 }
 
-func (c categoryHandler) GetCategories(w http.ResponseWriter, r *http.Request) {
+func (c categoryHandler) GetCategories(r *http.Request) (server.HttpResponse, error) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	siteID := vars["siteID"]
 	categories, err := c.CategoryService.GetCategories(ctx, siteID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		return server.HttpResponse{}, err
 	}
-	response, _ := json.Marshal(categories)
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(response)
+
+	return server.HttpResponse{
+		StatusCode: 200,
+		Body:       categories,
+	}, nil
+
 }
