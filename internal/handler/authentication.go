@@ -47,7 +47,6 @@ func (t authHandler) Create(r *http.Request) (server.HttpResponse, error) {
 }
 
 func (t authHandler) GetUrlAuthentication(request *http.Request) (server.HttpResponse, error) {
-	panic("uata fucky!!!")
 	ctx := request.Context()
 	url := t.AuthenticationService.GetUrlAuthentication(ctx)
 

@@ -28,7 +28,7 @@ func main() {
 	server.NewWebServerBuilder().
 		Use(server.InjectRequestID).
 		Use(server.InjectLogger).
-		Use(server.HandlePanic).
+		Use(server.Recovery).
 		AddRouter("/api/v1/sites/{siteID}/categories", http.MethodGet, categoryHandler.GetCategories).
 		AddRouter("/api/v1/tokens", http.MethodPost, tokenHandler.Create).
 		AddRouter("/api/v1/auth/url", http.MethodGet, tokenHandler.GetUrlAuthentication).

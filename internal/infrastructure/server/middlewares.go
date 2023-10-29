@@ -34,7 +34,7 @@ func InjectRequestID(next http.Handler) http.Handler {
 	})
 }
 
-func HandlePanic(next http.Handler) http.Handler {
+func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		logger, _ := contexthelper.GetLogger(ctx)
