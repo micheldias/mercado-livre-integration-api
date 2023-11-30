@@ -30,6 +30,7 @@ type WebServerBuilder interface {
 
 func NewWebServerBuilder() WebServerBuilder {
 	r := mux.NewRouter()
+	r.Use(CORS)
 	r.HandleFunc("/health", healthCheckHandler).Methods(http.MethodGet)
 	return &server{
 		Router: r,
@@ -41,8 +42,7 @@ type server struct {
 }
 
 func (s server) AddRouter(path, method string, handler func(r *http.Request) (HttpResponse, error)) WebServerBuilder {
-	s.Router.HandleFunc(path, errorHandler(handler)).Methods(method)
-	s.Router.Use()
+	s.Router.HandleFunc(path, errorHandler(handler)).Methods(method, http.MethodOptions)
 	return s
 }
 
