@@ -4,7 +4,9 @@ import (
 	"github.com/spf13/viper"
 	"mercado-livre-integration/internal/handler"
 	"mercado-livre-integration/internal/infrastructure/client"
+	"mercado-livre-integration/internal/infrastructure/database"
 	"mercado-livre-integration/internal/infrastructure/server"
+	"mercado-livre-integration/internal/repository"
 	"mercado-livre-integration/internal/service"
 	"net/http"
 )
@@ -24,6 +26,14 @@ func main() {
 
 	categoryHandler := handler.NewCategory(service.NewCategory(client))
 	tokenHandler := handler.NewToken(service.NewAuthenticationService(client))
+	db, _ := database.NewDatabase(database.DBConfig{
+		Host:     viper.GetString("DATABASE_HOST"),
+		Port:     viper.GetInt("DATABASE_PORT"),
+		DbName:   viper.GetString("DATABASE_NAME"),
+		User:     viper.GetString("DATABASE_USER"),
+		Password: viper.GetString("DATABASE_PASSWORD"),
+	})
+	service.NewApplicationService(repository.NewApplicationRepository(db))
 
 	server.NewWebServerBuilder().
 		Use(server.InjectRequestID).
