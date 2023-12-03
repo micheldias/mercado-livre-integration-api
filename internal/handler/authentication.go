@@ -37,8 +37,8 @@ func (t authHandler) Create(r *http.Request) (server.HttpResponse, error) {
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		return server.HttpResponse{}, err
 	}
-
-	token, err := t.AuthenticationService.Create(ctx, payload.AuthCode)
+	appID, _ := strconv.Atoi(mux.Vars(r)["id"])
+	token, err := t.AuthenticationService.Create(ctx, appID, payload.AuthCode)
 	if err != nil {
 		return server.HttpResponse{}, err
 	}

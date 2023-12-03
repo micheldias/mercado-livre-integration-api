@@ -7,7 +7,7 @@ import (
 )
 
 type CategoryService interface {
-	GetCategories(ctx context.Context, siteID string) (model.Categories, error)
+	GetCategories(ctx context.Context, appId int, siteID string) (model.Categories, error)
 }
 
 type category struct {
@@ -21,7 +21,7 @@ func NewCategory(mercadoLivreClient client.MercadoLivre) CategoryService {
 
 }
 
-func (c category) GetCategories(ctx context.Context, siteID string) (categories model.Categories, err error) {
+func (c category) GetCategories(ctx context.Context, appId int, siteID string) (categories model.Categories, err error) {
 	mlCategories, err := c.mercadoLivreClient.GetCategories(ctx, siteID)
 	if err != nil {
 		return categories, err

@@ -95,9 +95,9 @@ func TestAuthClient(t *testing.T) {
 		httpmock.RegisterResponder(http.MethodPost, "http://mocktest/oauth/token",
 			httpmock.NewStringResponder(http.StatusOK, authCodeResponse))
 
-		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
+		client := NewMercadoLivre("http://mocktest", time.Second)
 
-		response, err := client.CreateToken(context.Background(), "TG-648f8999952b710001817e36-146322322")
+		response, err := client.CreateToken(context.Background(), "client_id", "client_secret", "http://localhost", "TG-648f8999952b710001817e36-146322322")
 
 		assert.Nil(t, err)
 		assert.Equal(t, "APP_USR-761615972200605-061812-79870010a2b5027f9bdd7500a00fe6f8-146322322", response.AccessToken)
@@ -113,9 +113,9 @@ func TestAuthClient(t *testing.T) {
 		defer httpmock.DeactivateAndReset()
 		httpmock.RegisterResponder(http.MethodPost, "http://mocktest/oauth/token",
 			httpmock.NewStringResponder(http.StatusBadRequest, authCodeResponseError))
-		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
+		client := NewMercadoLivre("http://mocktest", time.Second)
 
-		_, err := client.CreateToken(context.Background(), "TG-648f8999952b710001817e36-146322322")
+		_, err := client.CreateToken(context.Background(), "client_id", "client_secret", "http://localhost", "TG-648f8999952b710001817e36-146322322")
 
 		assert.EqualError(t, err, "status code: 400")
 
@@ -127,9 +127,9 @@ func TestAuthClient(t *testing.T) {
 
 		httpmock.RegisterResponder(http.MethodPost, "http://mocktest/oauth/token",
 			httpmock.NewErrorResponder(errors.New("bla")))
-		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
+		client := NewMercadoLivre("http://mocktest", time.Second)
 
-		_, err := client.CreateToken(context.Background(), "auth-code")
+		_, err := client.CreateToken(context.Background(), "client_id", "client_secret", "http://localhost", "auth-code")
 		assert.EqualError(t, err, `failed to execute http request. Error: Post "http://mocktest/oauth/token": bla`)
 	})
 }
@@ -143,7 +143,7 @@ func TestGetUser(t *testing.T) {
 		httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("http://mocktest/users/%s", "12344"),
 			httpmock.NewStringResponder(http.StatusOK, getUserResponse))
 
-		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
+		client := NewMercadoLivre("http://mocktest", time.Second)
 
 		user, err := client.GetUser(context.Background(), "12344")
 
@@ -162,7 +162,7 @@ func TestGetSites(t *testing.T) {
 		httpmock.RegisterResponder(http.MethodGet, "http://mocktest/sites",
 			httpmock.NewStringResponder(http.StatusOK, getSitesResponse))
 
-		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
+		client := NewMercadoLivre("http://mocktest", time.Second)
 
 		sites, err := client.GetSites(context.Background())
 
@@ -183,7 +183,7 @@ func TestGetCategories(t *testing.T) {
 		httpmock.RegisterResponder(http.MethodGet, "http://mocktest/sites/MLB/categories",
 			httpmock.NewStringResponder(http.StatusOK, getCategoriesResponse))
 
-		client := NewMercadoLivre("client_id", "client_secret", "http://localhost", "http://mocktest", time.Second)
+		client := NewMercadoLivre("http://mocktest", time.Second)
 
 		categories, err := client.GetCategories(context.Background(), "MLB")
 

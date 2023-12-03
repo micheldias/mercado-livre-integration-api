@@ -10,7 +10,7 @@ import (
 )
 
 type AuthenticationService interface {
-	Create(ctx context.Context, authCode string) (model.Token, error)
+	Create(ctx context.Context, applicationID int, authCode string) (model.Token, error)
 	GetUrlAuthentication(ctx context.Context, applicationID int) (string, error)
 }
 type authService struct {
@@ -25,8 +25,13 @@ func NewAuthenticationService(mercadoLivreClient client.MercadoLivre, service Ap
 	}
 }
 
-func (t authService) Create(ctx context.Context, authCode string) (model.Token, error) {
-	accessToken, err := t.mercadoLivreClient.CreateToken(ctx, authCode)
+func (t authService) Create(ctx context.Context, applicationID int, authCode string) (model.Token, error) {
+	app, err := t.appService.GetAppByID(ctx, applicationID)
+	if err != nil {
+		return model.Token{}, err
+	}
+
+	accessToken, err := t.mercadoLivreClient.CreateToken(ctx, app.ClientID, app.Secret, app.RedirectURL, authCode)
 	if err != nil {
 		return model.Token{}, err
 	}

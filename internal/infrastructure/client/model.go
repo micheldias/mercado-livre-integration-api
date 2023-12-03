@@ -2,6 +2,11 @@ package client
 
 import "time"
 
+type CacheAuth struct {
+	ClientID          string
+	ClientSecret      string
+	AuthTokenResponse AuthTokenResponse
+}
 type AuthTokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`

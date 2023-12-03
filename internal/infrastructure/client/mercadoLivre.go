@@ -13,10 +13,10 @@ import (
 )
 
 type MercadoLivre interface {
-	CreateToken(ctx context.Context, authCode string) (AuthTokenResponse, error)
+	CreateToken(ctx context.Context, clientID, clientSecret, redirectURL, authCode string) (AuthTokenResponse, error)
 	GetUser(ctx context.Context, userID string) (User, error)
 	GetSites(ctx context.Context) (Sites, error)
-	GetCategories(ctx context.Context, siteID string) (Categories, error)
+	GetCategories(ctx context.Context, appId int, siteID string) (Categories, error)
 	CreateProduct(ctx context.Context, product ProductRequest) (ProductResponse, error)
 }
 
@@ -28,7 +28,7 @@ func NewMercadoLivre(url string, executeTimes time.Duration) MercadoLivre {
 		httpClient: &http.Client{
 			Transport: &util.RoundTripperLogger{Inner: http.DefaultTransport},
 		},
-		cache: make(map[string]AuthTokenResponse),
+		cache: make(map[string]CacheAuth),
 	}
 
 	go client.refreshTokenTask()
@@ -37,11 +37,8 @@ func NewMercadoLivre(url string, executeTimes time.Duration) MercadoLivre {
 
 type mercadoLivre struct {
 	url          string
-	clientID     string
-	clientSecret string
-	redirectUrl  string
 	httpClient   *http.Client
-	cache        map[string]AuthTokenResponse
+	cache        map[string]CacheAuth
 	executeTimes time.Duration
 }
 
@@ -62,7 +59,9 @@ func (m mercadoLivre) CreateProduct(ctx context.Context, product ProductRequest)
 	return makeRequestAndConvertResponseBody[ProductResponse](m, request)
 }
 
-func (m mercadoLivre) GetCategories(ctx context.Context, siteID string) (Categories, error) {
+func (m mercadoLivre) GetCategories(ctx context.Context, appId int, siteID string) (Categories, error) {
+	//TODO: get cache by appID.
+
 	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/sites/%s/categories", m.url, siteID), nil)
 	var categories Categories
 	if err != nil {
@@ -93,15 +92,20 @@ func (m mercadoLivre) GetUser(ctx context.Context, userID string) (User, error) 
 	return user, err
 }
 
-func (m mercadoLivre) CreateToken(ctx context.Context, authCode string) (AuthTokenResponse, error) {
-	body := m.toTokenBody(authCode)
+func (m mercadoLivre) CreateToken(ctx context.Context, clientID, clientSecret, redirectURL, authCode string) (AuthTokenResponse, error) {
+	body := m.toTokenBody(clientID, clientSecret, redirectURL, authCode)
 	tokenResponse, err := m.requestToken(ctx, body)
-	m.cache["refresh_token"] = tokenResponse
+	m.cache["refresh_token"] = CacheAuth{
+		ClientID:          clientID,
+		ClientSecret:      clientSecret,
+		AuthTokenResponse: tokenResponse,
+	}
+
 	return tokenResponse, err
 }
 
-func (m mercadoLivre) refreshToken(refreshToken string) (AuthTokenResponse, error) {
-	body := m.toRefreshTokenBody(refreshToken)
+func (m mercadoLivre) refreshToken(clientID, clientSecret, refreshToken string) (AuthTokenResponse, error) {
+	body := m.toRefreshTokenBody(clientID, clientSecret, refreshToken)
 	tokenResponse, err := m.requestToken(context.Background(), body)
 	return tokenResponse, err
 }
@@ -116,24 +120,24 @@ func (m mercadoLivre) requestToken(ctx context.Context, body *strings.Reader) (A
 	return token, err
 }
 
-func (m mercadoLivre) toTokenBody(authCode string) *strings.Reader {
-	data := m.buildTokenBodyFields()
+func (m mercadoLivre) toTokenBody(clientID, clientSecret, redirectURL, authCode string) *strings.Reader {
+	data := m.buildTokenBodyFields(clientID, clientSecret)
 	data.Set("grant_type", "authorization_code")
 	data.Set("code", authCode)
-	data.Set("redirect_uri", m.redirectUrl)
+	data.Set("redirect_uri", redirectURL)
 	return strings.NewReader(data.Encode())
 }
-func (m mercadoLivre) toRefreshTokenBody(refreshToken string) *strings.Reader {
-	data := m.buildTokenBodyFields()
+func (m mercadoLivre) toRefreshTokenBody(clientID, clientSecret, refreshToken string) *strings.Reader {
+	data := m.buildTokenBodyFields(clientID, clientSecret)
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", refreshToken)
 	return strings.NewReader(data.Encode())
 }
 
-func (m mercadoLivre) buildTokenBodyFields() url.Values {
+func (m mercadoLivre) buildTokenBodyFields(clientID, clientSecret string) url.Values {
 	data := url.Values{}
-	data.Set("client_id", m.clientID)
-	data.Set("client_secret", m.clientSecret)
+	data.Set("client_id", clientID)
+	data.Set("client_secret", clientSecret)
 	return data
 }
 
@@ -163,13 +167,18 @@ func (m mercadoLivre) refreshTokenTask() {
 	ticker := time.NewTicker(m.executeTimes)
 	go func() {
 		for range ticker.C {
+			//TODO: make refresh token by applicationID
 			refreshToken, ok := m.cache["refresh_token"]
 			if ok {
-				token, err := m.refreshToken(refreshToken.RefreshToken)
+				token, err := m.refreshToken(refreshToken.ClientID, refreshToken.ClientSecret, refreshToken.AuthTokenResponse.RefreshToken)
 				if err != nil {
 					fmt.Println("error ao fazer refresh de token")
 				}
-				m.cache["refresh_token"] = token
+				m.cache["refresh_token"] = CacheAuth{
+					ClientID:          refreshToken.ClientID,
+					ClientSecret:      refreshToken.ClientSecret,
+					AuthTokenResponse: token,
+				}
 			} else {
 				fmt.Println("refresh token nao localizado")
 			}

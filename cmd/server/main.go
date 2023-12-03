@@ -36,8 +36,8 @@ func main() {
 		Use(server.InjectRequestID).
 		Use(server.InjectLogger).
 		Use(server.Recovery).
-		AddRouter("/api/v1/sites/{siteID}/categories", http.MethodGet, categoryHandler.GetCategories).
-		AddRouter("/api/v1/tokens", http.MethodPost, tokenHandler.Create).
+		AddRouter("/api/v1/applications/{id}/sites/{siteID}/categories", http.MethodGet, categoryHandler.GetCategories).
+		AddRouter("/api/v1/applications/{id}/tokens", http.MethodPost, tokenHandler.Create).
 		AddRouter("/api/v1/applications/{id}/auth_url", http.MethodGet, tokenHandler.GetUrlAuthentication).
 		AddRouter("/api/v1/applications/{id}", http.MethodGet, applicationHandler.GetByID).
 		StartServer()

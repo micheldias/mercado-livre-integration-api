@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"errors"
 	"github.com/gorilla/mux"
 	"mercado-livre-integration/internal/infrastructure/server"
 	"mercado-livre-integration/internal/service"
 	"net/http"
+	"strconv"
 )
 
 type CategoryHandler interface {
@@ -27,11 +27,9 @@ func (c categoryHandler) GetCategories(r *http.Request) (server.HttpResponse, er
 	vars := mux.Vars(r)
 	siteID := vars["siteID"]
 
-	if appID := r.URL.Query().Get("applicationID"); appID == "" {
-		return server.HttpResponse{}, errors.New("applicationID is required")
-	}
+	appID, _ := strconv.Atoi(mux.Vars(r)["id"])
 
-	categories, err := c.CategoryService.GetCategories(ctx, siteID)
+	categories, err := c.CategoryService.GetCategories(ctx, appID, siteID)
 	if err != nil {
 		return server.HttpResponse{}, err
 	}
