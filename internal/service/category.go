@@ -22,7 +22,7 @@ func NewCategory(mercadoLivreClient client.MercadoLivre) CategoryService {
 }
 
 func (c category) GetCategories(ctx context.Context, appId int, siteID string) (categories model.Categories, err error) {
-	mlCategories, err := c.mercadoLivreClient.GetCategories(ctx, siteID)
+	mlCategories, err := c.mercadoLivreClient.GetCategories(ctx, appId, siteID)
 	if err != nil {
 		return categories, err
 	}
