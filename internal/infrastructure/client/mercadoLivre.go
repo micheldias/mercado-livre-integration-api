@@ -21,12 +21,9 @@ type MercadoLivre interface {
 }
 
 // NewMercadoLivre creates a new Mercado Livre client
-func NewMercadoLivre(clientID, secret, redirectUrl, url string, executeTimes time.Duration) MercadoLivre {
+func NewMercadoLivre(url string, executeTimes time.Duration) MercadoLivre {
 	client := &mercadoLivre{
 		url:          url,
-		clientID:     clientID,
-		clientSecret: secret,
-		redirectUrl:  redirectUrl,
 		executeTimes: executeTimes,
 		httpClient: &http.Client{
 			Transport: &util.RoundTripperLogger{Inner: http.DefaultTransport},

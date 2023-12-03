@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"github.com/gorilla/mux"
 	"mercado-livre-integration/internal/infrastructure/server"
 	"mercado-livre-integration/internal/service"
@@ -25,6 +26,11 @@ func (c categoryHandler) GetCategories(r *http.Request) (server.HttpResponse, er
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	siteID := vars["siteID"]
+
+	if appID := r.URL.Query().Get("applicationID"); appID == "" {
+		return server.HttpResponse{}, errors.New("applicationID is required")
+	}
+
 	categories, err := c.CategoryService.GetCategories(ctx, siteID)
 	if err != nil {
 		return server.HttpResponse{}, err

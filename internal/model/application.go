@@ -1,7 +1,7 @@
 package model
 
 type Application struct {
-	ID          int    `json:"id" gorm:"autoIncrement"`
+	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	ClientID    string `json:"client_id"`
 	Secret      string `json:"secret"`
@@ -9,5 +9,5 @@ type Application struct {
 }
 
 func (a Application) TableName() string {
-	return "applications"
+	return "api.applications"
 }

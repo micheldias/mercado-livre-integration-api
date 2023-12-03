@@ -11,15 +11,17 @@ import (
 
 type AuthenticationService interface {
 	Create(ctx context.Context, authCode string) (model.Token, error)
-	GetUrlAuthentication(ctx context.Context) string
+	GetUrlAuthentication(ctx context.Context, applicationID int) (string, error)
 }
 type authService struct {
 	mercadoLivreClient client.MercadoLivre
+	appService         ApplicationService
 }
 
-func NewAuthenticationService(mercadoLivreClient client.MercadoLivre) AuthenticationService {
+func NewAuthenticationService(mercadoLivreClient client.MercadoLivre, service ApplicationService) AuthenticationService {
 	return authService{
 		mercadoLivreClient: mercadoLivreClient,
+		appService:         service,
 	}
 }
 
@@ -36,11 +38,15 @@ func (t authService) Create(ctx context.Context, authCode string) (model.Token, 
 	}, err
 }
 
-func (t authService) GetUrlAuthentication(ctx context.Context) string {
+func (t authService) GetUrlAuthentication(ctx context.Context, applicationID int) (string, error) {
+	app, err := t.appService.GetAppByID(ctx, applicationID)
+	if err != nil {
+		return "", err
+	}
 	return fmt.Sprintf("%s/authorization?response_type=code&client_id=%s&redirect_uri=%s&state=%s",
 		viper.GetString("MERCADO_LIVRE_AUTH_URL"),
-		viper.GetString("MERCADO_LIVRE_CLIENT_ID"),
-		viper.GetString("MERCADO_LIVRE_REDIRECT_URL"),
+		app.ClientID,
+		app.RedirectURL,
 		uuid.New().String(),
-	)
+	), err
 }

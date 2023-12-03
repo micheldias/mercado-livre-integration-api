@@ -2,9 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"mercado-livre-integration/internal/infrastructure/server"
 	"mercado-livre-integration/internal/service"
 	"net/http"
+	"strconv"
 )
 
 type tokenRequest struct {
@@ -48,8 +50,11 @@ func (t authHandler) Create(r *http.Request) (server.HttpResponse, error) {
 
 func (t authHandler) GetUrlAuthentication(request *http.Request) (server.HttpResponse, error) {
 	ctx := request.Context()
-	url := t.AuthenticationService.GetUrlAuthentication(ctx)
-
+	appID, _ := strconv.Atoi(mux.Vars(request)["id"])
+	url, err := t.AuthenticationService.GetUrlAuthentication(ctx, appID)
+	if err != nil {
+		return server.HttpResponse{}, err
+	}
 	return server.HttpResponse{
 		StatusCode: 200,
 		Body:       UrlResponse{Url: url},

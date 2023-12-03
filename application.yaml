@@ -1,7 +1,12 @@
-mercado_livre_client_id: "mercado_livre_client_id"
-mercado_livre_secret: "mercado_livre_secret"
-mercado_livre_api_url: "mercado_livre_api_url"
-mercado_livre_redirect_url: "mercado_livre_redirect_url"
+server_port: "8080"
+server_write_timeout: "15s"
+server_read_timeout: "15s"
+mercado_livre_api_url: "https://api.mercadolibre.com"
+mercado_livre_auth_url: "https://auth.mercadolibre.com"
 mercado_livre_execute_times: "6h"
-
+database_host: "localhost"
+database_port: 5432
+database_name: "mercadolivre_db"
+database_user: "myuser"
+database_password: "mypassword"
 
