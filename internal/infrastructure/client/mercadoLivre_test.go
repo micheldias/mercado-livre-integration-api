@@ -185,7 +185,7 @@ func TestGetCategories(t *testing.T) {
 
 		client := NewMercadoLivre("http://mocktest", time.Second)
 
-		categories, err := client.GetCategories(context.Background(), "MLB")
+		categories, err := client.GetCategories(context.Background(), 1, "MLB")
 
 		assert.Nil(t, err)
 		assert.Equal(t, 3, len(categories))
