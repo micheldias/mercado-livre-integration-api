@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"mercado-livre-integration/internal/infrastructure/server"
 	"mercado-livre-integration/internal/model"
@@ -29,6 +30,8 @@ func fromDomain(domain model.Application) applicationResponse {
 
 type ApplicationHandler interface {
 	GetByID(request *http.Request) (server.HttpResponse, error)
+	GetAll(request *http.Request) (server.HttpResponse, error)
+	Save(request *http.Request) (server.HttpResponse, error)
 }
 
 func NewApplication(service service.ApplicationService) ApplicationHandler {
@@ -52,5 +55,34 @@ func (a appHandler) GetByID(r *http.Request) (server.HttpResponse, error) {
 	return server.HttpResponse{
 		StatusCode: http.StatusOK,
 		Body:       fromDomain(app),
+	}, nil
+}
+
+func (a appHandler) GetAll(r *http.Request) (server.HttpResponse, error) {
+	ctx := r.Context()
+	app, err := a.ApplicationService.GetApps(ctx)
+	if err != nil {
+		return server.HttpResponse{}, err
+	}
+	return server.HttpResponse{
+		StatusCode: http.StatusOK,
+		Body:       app,
+	}, nil
+}
+
+func (a appHandler) Save(r *http.Request) (server.HttpResponse, error) {
+	ctx := r.Context()
+	var app model.Application
+	if err := json.NewDecoder(r.Body).Decode(&app); err != nil {
+		return server.HttpResponse{}, err
+	}
+
+	app, err := a.ApplicationService.SaveApp(ctx, app)
+	if err != nil {
+		return server.HttpResponse{}, err
+	}
+	return server.HttpResponse{
+		StatusCode: http.StatusCreated,
+		Body:       app,
 	}, nil
 }

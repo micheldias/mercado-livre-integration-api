@@ -31,11 +31,16 @@ func (a appRepository) GetByID(ctx context.Context, id int) (model.Application, 
 }
 
 func (a appRepository) Get(ctx context.Context) ([]model.Application, error) {
-	//TODO implement me
-	panic("implement me")
+	var apps []model.Application
+	if err := a.dbConnection.WithContext(ctx).Find(apps).Error; err != nil {
+		return apps, err
+	}
+	return apps, nil
 }
 
 func (a appRepository) Save(ctx context.Context, app model.Application) (model.Application, error) {
-	//TODO implement me
-	panic("implement me")
+	if err := a.dbConnection.WithContext(ctx).Create(app).Error; err != nil {
+		return app, err
+	}
+	return app, nil
 }

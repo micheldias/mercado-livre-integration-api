@@ -27,11 +27,9 @@ func (a appService) GetAppByID(ctx context.Context, id int) (model.Application, 
 }
 
 func (a appService) GetApps(ctx context.Context) ([]model.Application, error) {
-	//TODO implement me
-	panic("implement me")
+	return a.repo.Get(ctx)
 }
 
 func (a appService) SaveApp(ctx context.Context, app model.Application) (model.Application, error) {
-	//TODO implement me
-	panic("implement me")
+	return a.repo.Save(ctx, app)
 }

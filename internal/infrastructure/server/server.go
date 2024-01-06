@@ -24,6 +24,7 @@ func LoadEnvVars() {
 
 type WebServerBuilder interface {
 	AddRouter(path, method string, handler func(r *http.Request) (HttpResponse, error)) WebServerBuilder
+	AddApiPrefix(prefix string) WebServerBuilder
 	Use(func(http.Handler) http.Handler) WebServerBuilder
 	StartServer()
 }
@@ -38,11 +39,17 @@ func NewWebServerBuilder() WebServerBuilder {
 }
 
 type server struct {
-	Router *mux.Router
+	Router    *mux.Router
+	ApiPrefix string
+}
+
+func (s server) AddApiPrefix(prefix string) WebServerBuilder {
+	s.ApiPrefix = prefix
+	return s
 }
 
 func (s server) AddRouter(path, method string, handler func(r *http.Request) (HttpResponse, error)) WebServerBuilder {
-	s.Router.HandleFunc(path, errorHandler(handler)).Methods(method, http.MethodOptions)
+	s.Router.HandleFunc(fmt.Sprintf("%s%s", s.ApiPrefix, path), errorHandler(handler)).Methods(method, http.MethodOptions)
 	return s
 }
 

@@ -36,10 +36,13 @@ func main() {
 		Use(server.InjectRequestID).
 		Use(server.InjectLogger).
 		Use(server.Recovery).
-		AddRouter("/api/v1/applications/{id}/sites/{siteID}/categories", http.MethodGet, categoryHandler.GetCategories).
-		AddRouter("/api/v1/applications/{id}/tokens", http.MethodPost, tokenHandler.Create).
-		AddRouter("/api/v1/applications/{id}/auth_url", http.MethodGet, tokenHandler.GetUrlAuthentication).
-		AddRouter("/api/v1/applications/{id}", http.MethodGet, applicationHandler.GetByID).
+		AddApiPrefix("/api/v1").
+		AddRouter("/applications/{id}/sites/{siteID}/categories", http.MethodGet, categoryHandler.GetCategories).
+		AddRouter("/applications/{id}/tokens", http.MethodPost, tokenHandler.Create).
+		AddRouter("/applications/{id}/auth_url", http.MethodGet, tokenHandler.GetUrlAuthentication).
+		AddRouter("/applications/{id}", http.MethodGet, applicationHandler.GetByID).
+		AddRouter("/applications", http.MethodGet, applicationHandler.GetAll).
+		AddRouter("/applications", http.MethodPost, applicationHandler.Save).
 		StartServer()
 
 }
