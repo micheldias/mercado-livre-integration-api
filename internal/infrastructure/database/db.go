@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	_ "github.com/newrelic/go-agent/v3/integrations/nrpq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -19,6 +20,7 @@ func NewDatabase(conf DBConfig) (*gorm.DB, error) {
 		conf.Host, conf.User, conf.Password, conf.DbName, conf.Port)
 
 	return gorm.Open(postgres.New(postgres.Config{
+		DriverName:           "nrpostgres",
 		DSN:                  dsn,
 		PreferSimpleProtocol: true,
 	}), &gorm.Config{})

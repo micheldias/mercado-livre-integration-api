@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/spf13/viper"
 	"io"
 	contexthelper "mercado-livre-integration/internal/infrastructure/contextHelper"
@@ -33,14 +34,20 @@ func NewWebServerBuilder() WebServerBuilder {
 	r := mux.NewRouter()
 	r.Use(CORS)
 	r.HandleFunc("/health", healthCheckHandler).Methods(http.MethodGet)
+	app, _ := newrelic.NewApplication(
+		newrelic.ConfigAppName("mercado-livre-api"),
+		newrelic.ConfigLicense("818df34055dd07e191f264b13eaa925aFFFFNRAL"),
+	)
 	return &server{
-		Router: r,
+		Router:      r,
+		NewRelicApp: app,
 	}
 }
 
 type server struct {
-	Router    *mux.Router
-	ApiPrefix string
+	Router      *mux.Router
+	ApiPrefix   string
+	NewRelicApp *newrelic.Application
 }
 
 func (s server) AddApiPrefix(prefix string) WebServerBuilder {
@@ -49,7 +56,8 @@ func (s server) AddApiPrefix(prefix string) WebServerBuilder {
 }
 
 func (s server) AddRouter(path, method string, handler func(r *http.Request) (HttpResponse, error)) WebServerBuilder {
-	s.Router.HandleFunc(fmt.Sprintf("%s%s", s.ApiPrefix, path), errorHandler(handler)).Methods(method, http.MethodOptions)
+	//s.Router.HandleFunc(fmt.Sprintf("%s%s", s.ApiPrefix, path), errorHandler(handler)).Methods(method, http.MethodOptions)
+	s.Router.HandleFunc(newrelic.WrapHandleFunc(s.NewRelicApp, fmt.Sprintf("%s%s", s.ApiPrefix, path), errorHandler(handler))).Methods(method, http.MethodOptions)
 	return s
 }
 

@@ -1,6 +1,6 @@
 CREATE SCHEMA api;
 
-CREATE TABLE applications
+CREATE TABLE api.applications
 (
     id           serial  CONSTRAINT applications_pkey PRIMARY KEY,
     name         VARCHAR(80) NOT NULL,

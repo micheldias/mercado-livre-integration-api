@@ -32,6 +32,7 @@ func main() {
 	applicationService := service.NewApplicationService(repository.NewApplicationRepository(db))
 	tokenHandler := handler.NewToken(service.NewAuthenticationService(client, applicationService))
 	applicationHandler := handler.NewApplication(applicationService)
+
 	server.NewWebServerBuilder().
 		Use(server.InjectRequestID).
 		Use(server.InjectLogger).
