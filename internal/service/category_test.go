@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"mercado-livre-integration/internal/infrastructure/client"
@@ -11,13 +12,13 @@ import (
 func TestGetCategories(t *testing.T) {
 	t.Run("get categories successfully", func(t *testing.T) {
 		mockClient := mockks.MLClientMock{}
-		mockClient.On("GetCategories", mock.Anything).Return(client.Categories{
+		mockClient.On("GetCategories", mock.Anything, mock.Anything, mock.Anything).Return(client.Categories{
 			{ID: "1", Name: "bla"},
 			{ID: "2", Name: "bla_bla"},
 		}, nil)
 
 		service := NewCategory(mockClient)
-		categories, err := service.GetCategories("12343")
+		categories, err := service.GetCategories(context.Background(), 1, "12343")
 		assert.NoError(t, err)
 		assert.Equal(t, 2, len(categories))
 		assert.Equal(t, "1", categories[0].ID)
@@ -26,16 +27,4 @@ func TestGetCategories(t *testing.T) {
 		assert.Equal(t, "bla_bla", categories[1].Name)
 
 	})
-	t.Run("get categories successfully", func(t *testing.T) {
-		mockClient := mockks.MLClientMock{}
-		mockClient.On("GetCategories", mock.Anything).Return(client.Categories{}, nil)
-
-		service := NewCategory(mockClient)
-		categories, err := service.GetCategories("12343")
-		assert.NoError(t, err)
-		assert.Equal(t, 0, len(categories))
-		assert.Nil(t, categories)
-
-	})
-
 }

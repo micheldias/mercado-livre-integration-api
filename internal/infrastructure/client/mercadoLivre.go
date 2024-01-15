@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	util "mercado-livre-integration/internal/infrastructure/http"
 	"net/http"
 	"net/url"
@@ -26,7 +27,7 @@ func NewMercadoLivre(url string, executeTimes time.Duration) MercadoLivre {
 		url:          url,
 		executeTimes: executeTimes,
 		httpClient: &http.Client{
-			Transport: &util.RoundTripperLogger{Inner: http.DefaultTransport},
+			Transport: newrelic.NewRoundTripper(&util.RoundTripperLogger{Inner: http.DefaultTransport}),
 		},
 		cache: make(map[string]CacheAuth),
 	}
