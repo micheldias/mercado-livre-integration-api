@@ -35,8 +35,8 @@ func NewWebServerBuilder() WebServerBuilder {
 	r.Use(CORS)
 	r.HandleFunc("/health", healthCheckHandler).Methods(http.MethodGet)
 	app, _ := newrelic.NewApplication(
-		newrelic.ConfigAppName("mercado-livre-api"),
-		newrelic.ConfigLicense("818df34055dd07e191f264b13eaa925aFFFFNRAL"),
+		newrelic.ConfigAppName(viper.GetString("APP_NAME")),
+		newrelic.ConfigLicense(viper.GetString("NEWRELIC_KEY")),
 	)
 	return &server{
 		Router:      r,
@@ -56,7 +56,6 @@ func (s server) AddApiPrefix(prefix string) WebServerBuilder {
 }
 
 func (s server) AddRouter(path, method string, handler func(r *http.Request) (HttpResponse, error)) WebServerBuilder {
-	//s.Router.HandleFunc(fmt.Sprintf("%s%s", s.ApiPrefix, path), errorHandler(handler)).Methods(method, http.MethodOptions)
 	s.Router.HandleFunc(newrelic.WrapHandleFunc(s.NewRelicApp, fmt.Sprintf("%s%s", s.ApiPrefix, path), errorHandler(handler))).Methods(method, http.MethodOptions)
 	return s
 }
@@ -83,12 +82,9 @@ func (s server) StartServer() {
 }
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	// A very simple health check.
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	// In the future we could report back on the status of our DB, or our cache
-	// (e.g. Redis) by performing a simple PING, and include them in the response.
 	io.WriteString(w, `{"alive": true}`)
 }
 

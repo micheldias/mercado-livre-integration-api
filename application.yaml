@@ -1,4 +1,6 @@
 server_port: "8080"
+app_name: "mercado-livre-api"
+newrelic_key: "12345566"
 server_write_timeout: "15s"
 server_read_timeout: "15s"
 mercado_livre_api_url: "https://api.mercadolibre.com"
