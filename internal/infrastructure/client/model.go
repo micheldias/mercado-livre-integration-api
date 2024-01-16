@@ -1,11 +1,15 @@
 package client
 
-import "time"
+import (
+	"time"
+)
 
 type CacheAuth struct {
-	ClientID          string
-	ClientSecret      string
-	AuthTokenResponse AuthTokenResponse
+	ClientID     string
+	ClientSecret string
+	ExpireIn     time.Time
+	AccessToken  string
+	RefreshToken string
 }
 type AuthTokenResponse struct {
 	AccessToken  string `json:"access_token"`

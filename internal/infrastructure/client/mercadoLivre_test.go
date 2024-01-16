@@ -184,8 +184,7 @@ func TestGetCategories(t *testing.T) {
 			httpmock.NewStringResponder(http.StatusOK, getCategoriesResponse))
 
 		client := NewMercadoLivre("http://mocktest", time.Second)
-
-		categories, err := client.GetCategories(context.Background(), 1, "MLB")
+		categories, err := client.GetCategories(context.Background(), "123", "MLB")
 
 		assert.Nil(t, err)
 		assert.Equal(t, 3, len(categories))

@@ -24,8 +24,8 @@ func (m MLClientMock) GetSites(ctx context.Context) (client.Sites, error) {
 	args := m.Called(ctx)
 	return args.Get(0).(client.Sites), args.Error(1)
 }
-func (m MLClientMock) GetCategories(ctx context.Context, appId int, siteID string) (client.Categories, error) {
-	args := m.Called(ctx, appId, siteID)
+func (m MLClientMock) GetCategories(ctx context.Context, clientID string, siteID string) (client.Categories, error) {
+	args := m.Called(ctx, clientID, siteID)
 	return args.Get(0).(client.Categories), args.Error(1)
 }
 func (m MLClientMock) CreateProduct(ctx context.Context, product client.ProductRequest) (client.ProductResponse, error) {

@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	util "mercado-livre-integration/internal/infrastructure/http"
+	logs "mercado-livre-integration/internal/infrastructure/log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -17,7 +19,7 @@ type MercadoLivre interface {
 	CreateToken(ctx context.Context, clientID, clientSecret, redirectURL, authCode string) (AuthTokenResponse, error)
 	GetUser(ctx context.Context, userID string) (User, error)
 	GetSites(ctx context.Context) (Sites, error)
-	GetCategories(ctx context.Context, appId int, siteID string) (Categories, error)
+	GetCategories(ctx context.Context, clientID string, siteID string) (Categories, error)
 	CreateProduct(ctx context.Context, product ProductRequest) (ProductResponse, error)
 }
 
@@ -60,15 +62,19 @@ func (m mercadoLivre) CreateProduct(ctx context.Context, product ProductRequest)
 	return makeRequestAndConvertResponseBody[ProductResponse](m, request)
 }
 
-func (m mercadoLivre) GetCategories(ctx context.Context, appId int, siteID string) (Categories, error) {
-	//TODO: get cache by appID.
+func (m mercadoLivre) GetCategories(ctx context.Context, clientID string, siteID string) (Categories, error) {
+	auth, ok := m.cache[clientID]
+	if !ok {
+		return Categories{}, errors.New("cannot find token in cache")
 
-	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/sites/%s/categories", m.url, siteID), nil)
+	}
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/sites/%s/categories", m.url, siteID), nil)
 	var categories Categories
 	if err != nil {
 		return categories, fmt.Errorf("failed to create http request: %s ", err.Error())
 	}
 	request.Header.Add("content-type", "handler/json")
+	request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", auth.AccessToken))
 	return makeRequestAndConvertResponseBody[Categories](m, request)
 }
 
@@ -94,14 +100,19 @@ func (m mercadoLivre) GetUser(ctx context.Context, userID string) (User, error) 
 }
 
 func (m mercadoLivre) CreateToken(ctx context.Context, clientID, clientSecret, redirectURL, authCode string) (AuthTokenResponse, error) {
-	body := m.toTokenBody(clientID, clientSecret, redirectURL, authCode)
-	tokenResponse, err := m.requestToken(ctx, body)
-	m.cache["refresh_token"] = CacheAuth{
-		ClientID:          clientID,
-		ClientSecret:      clientSecret,
-		AuthTokenResponse: tokenResponse,
+	tokenResponse, err := m.requestToken(ctx, m.toTokenBody(clientID, clientSecret, redirectURL, authCode))
+
+	if err != nil {
+		return tokenResponse, err
 	}
 
+	m.cache[clientID] = CacheAuth{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		AccessToken:  tokenResponse.AccessToken,
+		RefreshToken: tokenResponse.RefreshToken,
+		ExpireIn:     time.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second),
+	}
 	return tokenResponse, err
 }
 
@@ -166,24 +177,27 @@ func makeRequestAndConvertResponseBody[T any](m mercadoLivre, request *http.Requ
 
 func (m mercadoLivre) refreshTokenTask() {
 	ticker := time.NewTicker(m.executeTimes)
+	logger := logs.New("mercado-livre-api")
 	go func() {
 		for range ticker.C {
-			//TODO: make refresh token by applicationID
-			refreshToken, ok := m.cache["refresh_token"]
-			if ok {
-				token, err := m.refreshToken(refreshToken.ClientID, refreshToken.ClientSecret, refreshToken.AuthTokenResponse.RefreshToken)
-				if err != nil {
-					fmt.Println("error ao fazer refresh de token")
+			for k, v := range m.cache {
+				if time.Now().After(v.ExpireIn.Add(-time.Minute * 45)) {
+					token, err := m.refreshToken(v.ClientID, v.ClientSecret, v.RefreshToken)
+					if err != nil {
+						delete(m.cache, v.ClientID)
+						logger.Error(fmt.Sprintf("cannot refresh token for clientID: %s. Error: %v", v.ClientID, err))
+						continue
+					}
+					m.cache[k] = CacheAuth{
+						ClientID:     v.ClientID,
+						ClientSecret: v.ClientSecret,
+						AccessToken:  token.AccessToken,
+						RefreshToken: token.RefreshToken,
+						ExpireIn:     time.Now().Add(time.Duration(token.ExpiresIn) * time.Second),
+					}
 				}
-				m.cache["refresh_token"] = CacheAuth{
-					ClientID:          refreshToken.ClientID,
-					ClientSecret:      refreshToken.ClientSecret,
-					AuthTokenResponse: token,
-				}
-			} else {
-				fmt.Println("refresh token nao localizado")
-			}
 
+			}
 		}
 	}()
 	//ticker.Stop()
